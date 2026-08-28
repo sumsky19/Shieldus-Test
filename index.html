@@ -44,7 +44,7 @@ select:disabled{background:#eceef1;color:#999}
 .finish.ready{opacity:1}
 .back{display:flex;align-items:center;gap:4px;padding:2px 0 12px;font-weight:800;font-size:14px}
 .top-btn{position:fixed;right:18px;bottom:18px;z-index:200;width:52px;height:52px;border:0;border-radius:50%;background:#111;color:#fff;font-size:23px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.22);display:none}
-.record-toolbar{display:flex;gap:8px;align-items:center}
+.record-toolbar{display:flex;gap:8px;align-items:center}.record-toolbar .export-btn{border:0;border-radius:12px;background:#111;color:#fff;font-weight:800;padding:11px 14px;cursor:pointer;white-space:nowrap}.record-toolbar .export-btn:active{transform:translateY(1px);opacity:.9}
 .record-toolbar select{flex:1}
 .record-list .record{border:1px solid #e0e3e7;border-radius:13px;padding:12px;margin-top:10px;background:#fff}
 .record-head{display:flex;align-items:flex-start;gap:9px}
@@ -506,6 +506,7 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
     <div class="title">평가조회</div>
     <div class="record-toolbar">
       <select id="recordMonth"><option value="ALL">전체 월</option></select>
+      <button id="exportExcelBtn" class="export-btn" type="button">엑셀로 내보내기</button>
     </div>
     <div id="records" class="record-list"></div>
     <div class="delete-bar">
@@ -731,6 +732,40 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
       return '<div class="record"><div class="record-head"><input class="record-check" type="checkbox" data-id="'+r.id+'"><div><div class="record-title">'+escapeHTML(r.site||"구역 미상")+' . '+escapeHTML(r.date)+' . '+formatTime(r.savedAt)+'</div><div class="record-meta">피평가자: '+escapeHTML(r.evaluator||"")+'</div></div></div><div class="record-total">총점 '+escapeHTML(r.score)+'</div><details class="record-result"><summary>▶평가결과 조회</summary>'+cats+'</details><button class="delete-one" type="button" data-delete="'+r.id+'">이 평가 삭제</button></div>';
     }).join("");
   }
+  function csvCell(v){
+    const s=String(v??"").replace(/\r?\n/g," / ").trim();
+    return '"' + s.replace(/"/g,'""') + '"';
+  }
+  function exportRecordsToExcel(rows){
+    if(!rows.length){alert("내보낼 평가기록이 없습니다.");return;}
+    const header=["평가일","저장시간","권역","구역","구역유형","피평가자","총점","대분류","대분류 점수","대분류 만점","세부번호","평가항목","배점","평가점수","평가기준"];
+    const lines=[header.map(csvCell).join(",")];
+    rows.forEach(r=>{
+      const cats=r.categories||{};
+      Object.keys(cats).forEach(cat=>{
+        const c=cats[cat]||{};
+        const qs=c.questions||[];
+        if(!qs.length){
+          lines.push([r.date,formatTime(r.savedAt),r.region,r.site,r.siteType,r.evaluator,r.score,cat,c.sum,c.max,"","","","",""].map(csvCell).join(","));
+        }else{
+          qs.forEach(q=>{
+            lines.push([r.date,formatTime(r.savedAt),r.region,r.site,r.siteType,r.evaluator,r.score,cat,c.sum,c.max,q.no,q.text,q.maxScore,q.score,(q.criteria||[]).join(" / ")].map(csvCell).join(","));
+          });
+        }
+      });
+    });
+    const csv="\uFEFF"+lines.join("\r\n");
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a");
+    const f=recordMonth.value==="ALL"?"전체":recordMonth.value;
+    const now=new Date();
+    const stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0");
+    a.href=URL.createObjectURL(blob);
+    a.download="모의테스트_평가기록_"+f+"_"+stamp+".csv";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  }
+
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 
   // ---- Management UI ----
@@ -1103,6 +1138,11 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
   $("backManage").onclick=leaveManagement;
   finish.onclick=finishEvaluation;
   recordMonth.addEventListener("change",drawRecords);
+  $("exportExcelBtn").addEventListener("click",()=>{
+    const f=recordMonth.value,all=loadRecords();
+    const list=f==="ALL"?all:all.filter(r=>monthKey(r.date)===f);
+    exportRecordsToExcel(list);
+  });
   recordsEl.addEventListener("click",e=>{
     const del=e.target.closest(".delete-one");if(del){const id=Number(del.dataset.delete);if(confirm("이 평가를 삭제할까요?")){saveRecords(loadRecords().filter(r=>r.id!==id));drawRecords();}}
   });

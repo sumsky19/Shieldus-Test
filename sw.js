@@ -1,4 +1,4 @@
-const CACHE = 'skshieldus-mock-v7-local-2';
+const CACHE = 'skshieldus-mock-v7-local-3';
 const CORE = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./skshieldus-logo.png'];
 self.addEventListener('install', event => {
   self.skipWaiting();
