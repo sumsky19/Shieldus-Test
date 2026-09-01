@@ -241,6 +241,35 @@ button{position:relative;z-index:5;pointer-events:auto;-webkit-user-select:none;
   border-top:1px solid #eee;
 }
 .region-name-edit{height:42px;min-width:0}
+/* 권역별 배정 구역: 구역명과 X 버튼을 한 줄 우측 정렬 */
+.region-assigned-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 38px;
+  gap:8px;
+  align-items:center;
+  min-height:42px;
+  padding:7px 0;
+  border-top:1px solid #eee;
+}
+.region-assigned-row > span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.region-assigned-row .unassign-site{
+  width:38px;
+  min-width:38px;
+  height:38px;
+  min-height:38px;
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+  font-weight:800;
+  line-height:1;
+}
 .zone-admin-row{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) 125px 66px;
@@ -801,7 +830,7 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
     if(keep&&CFG.zones[keep])mgmtRegion.value=keep;else if(names.length)mgmtRegion.value=names[0];
     const r=mgmtRegion.value,assigned=CFG.zones[r]||[],sites=allSites();
     regionSitePicker.innerHTML='<option value="">구역 선택</option>'+sites.map(s=>'<option value="'+escapeHTML(s)+'" '+(assigned.includes(s)?'disabled':'')+'>'+escapeHTML(s)+(assigned.includes(s)?' (등록됨)':'')+'</option>').join("");
-    assignedSiteList.innerHTML=assigned.length?assigned.map(s=>'<div class="region-assigned-row"><span>'+escapeHTML(s)+'</span><button class="small-btn danger-btn unassign-site" data-site="'+escapeHTML(s)+'" type="button">배정해제</button></div>').join(""):'<div class="empty">이 권역에 배정된 구역이 없습니다.</div>';
+    assignedSiteList.innerHTML=assigned.length?assigned.map(s=>'<div class="region-assigned-row"><span>'+escapeHTML(s)+'</span><button class="small-btn danger-btn unassign-site" data-site="'+escapeHTML(s)+'" type="button" aria-label="배정 해제">X</button></div>').join(""):'<div class="empty">이 권역에 배정된 구역이 없습니다.</div>';
     assignedSiteList.querySelectorAll(".unassign-site").forEach(b=>b.addEventListener("click",()=>{
       const s=b.dataset.site;requestDelete(s+" 구역의 "+r+" 배정을 해제할까요?",()=>{CFG.zones[r]=(CFG.zones[r]||[]).filter(x=>x!==s);renderRegionAssignment();renderSiteAdmin();populateEvalSites();});
     }));
