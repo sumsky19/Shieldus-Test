@@ -243,6 +243,7 @@ button{position:relative;z-index:5;pointer-events:auto;-webkit-user-select:none;
   border-top:1px solid #eee;
 }
 .region-name-edit{height:42px;min-width:0}
+.region-rename-btn{height:42px;min-width:66px;padding:0 10px}
 /* 권역별 배정 구역: 구역명과 X 버튼을 한 줄 우측 정렬 */
 .region-assigned-row{
   display:grid;
@@ -839,20 +840,60 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
   }
   function siteRegions(siteName){return Object.keys(CFG.zones).filter(r=>(CFG.zones[r]||[]).includes(siteName));}
   function refreshMgmtZone(){renderSiteAdmin();renderRegionAssignment();}
+  function renameRegion(old,n){
+    old=String(old||"").trim();
+    n=String(n||"").trim();
+    if(!old || !n || old===n)return false;
+    if(!Object.prototype.hasOwnProperty.call(CFG.zones,old))return false;
+    if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){alert("이미 있는 권역입니다.");return false;}
+
+    // 현재 선택값을 먼저 보존한 뒤 권역 키를 변경합니다.
+    const currentMgmt=mgmtRegion.value;
+    const currentEval=region.value;
+    const next={};
+    Object.keys(CFG.zones).forEach(k=>{ next[k===old?n:k]=CFG.zones[k]; });
+    CFG.zones=next;
+
+    renderRegionAdmin();
+    refreshEvalRegions();
+
+    const nextMgmt=currentMgmt===old?n:currentMgmt;
+    if(nextMgmt && CFG.zones[nextMgmt])mgmtRegion.value=nextMgmt;
+    if(currentEval===old)region.value=n;
+    else if(CFG.zones[currentEval])region.value=currentEval;
+
+    renderRegionAssignment(nextMgmt);
+    populateEvalSites();
+    return true;
+  }
+
   function renderRegionAdmin(){
     const names=Object.keys(CFG.zones);
-    regionAdminList.innerHTML=names.map(r=>'<div class="region-admin-row" style="grid-template-columns:minmax(0,1fr)"><input class="region-name-edit" data-old-region="'+escapeHTML(r)+'" value="'+escapeHTML(r)+'" aria-label="권역 이름"></div>').join("");
-    regionAdminList.querySelectorAll(".region-name-edit").forEach(el=>el.addEventListener("change",()=>{
-      const old=el.dataset.oldRegion,n=el.value.trim();if(!n||n===old){el.value=old;return;}
-      if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){alert("이미 있는 권역입니다.");el.value=old;return;}
-      const currentMgmt=mgmtRegion.value,currentEval=region.value,next={};
-      Object.keys(CFG.zones).forEach(k=>{next[k===old?n:k]=CFG.zones[k];});CFG.zones=next;
-      renderRegionAdmin();refreshEvalRegions();
-      const nextMgmt = currentMgmt===old ? n : currentMgmt;
-      if(nextMgmt && CFG.zones[nextMgmt])mgmtRegion.value=nextMgmt;
-      if(currentEval===old)region.value=n;else if(CFG.zones[currentEval])region.value=currentEval;
-      renderRegionAssignment(nextMgmt);populateEvalSites();
+    regionAdminList.innerHTML=names.map(r=>
+      '<div class="region-admin-row">'+
+        '<input class="region-name-edit" data-old-region="'+escapeHTML(r)+'" value="'+escapeHTML(r)+'" aria-label="권역 이름">'+
+        '<button class="small-btn primary-btn region-rename-btn" type="button">변경</button>'+
+      '</div>'
+    ).join("");
+
+    regionAdminList.querySelectorAll(".region-rename-btn").forEach(btn=>btn.addEventListener("click",()=>{
+      const el=btn.parentElement.querySelector(".region-name-edit");
+      const old=el.getAttribute("data-old-region")||"";
+      const n=el.value.trim();
+      if(!n || n===old){el.value=old;return;}
+      renameRegion(old,n);
     }));
+
+    regionAdminList.querySelectorAll(".region-name-edit").forEach(el=>{
+      el.addEventListener("keydown",e=>{
+        if(e.key!=="Enter")return;
+        e.preventDefault();
+        const old=el.getAttribute("data-old-region")||"";
+        const n=el.value.trim();
+        if(!n || n===old){el.value=old;return;}
+        renameRegion(old,n);
+      });
+    });
   }
   function renderRegionAssignment(preferredRegion){
     const keep=preferredRegion || mgmtRegion.value,names=Object.keys(CFG.zones);
