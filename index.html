@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>SK쉴더스 모의테스트</title>
-<meta name="app-version" content="v7-local-save-fix">
+<meta name="app-version" content="v8-region-management">
 <meta name="application-name" content="SK쉴더스 모의테스트">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -44,7 +44,7 @@ select:disabled{background:#eceef1;color:#999}
 .finish.ready{opacity:1}
 .back{display:flex;align-items:center;gap:4px;padding:2px 0 12px;font-weight:800;font-size:14px}
 .top-btn{position:fixed;right:18px;bottom:18px;z-index:200;width:52px;height:52px;border:0;border-radius:50%;background:#111;color:#fff;font-size:23px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.22);display:none}
-.record-toolbar{display:flex;gap:8px;align-items:center}.record-toolbar .export-btn{border:0;border-radius:12px;background:#111;color:#fff;font-weight:800;padding:11px 14px;cursor:pointer;white-space:nowrap}.record-toolbar .export-btn:active{transform:translateY(1px);opacity:.9}
+.record-toolbar{display:flex;gap:8px;align-items:center}
 .record-toolbar select{flex:1}
 .record-list .record{border:1px solid #e0e3e7;border-radius:13px;padding:12px;margin-top:10px;background:#fff}
 .record-head{display:flex;align-items:flex-start;gap:9px}
@@ -61,7 +61,7 @@ select:disabled{background:#eceef1;color:#999}
 .delete-bar button{flex:1;height:45px;border:0;border-radius:10px;font-weight:800}
 .empty{padding:22px 8px;color:#888;text-align:center;font-size:13px}
 
-.management-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.management-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:12px}
 .management-nav button{height:42px;border:1px solid #d8dadd;background:#fff;border-radius:10px;font-weight:800;font-size:13px}
 .management-nav button.active{background:#111;color:#fff}
 .mgmt-row{display:flex;gap:7px;align-items:center;margin-top:8px}
@@ -82,7 +82,7 @@ select:disabled{background:#eceef1;color:#999}
 .criteria-edit input{height:40px}
 .help{font-size:12px;color:#777;line-height:1.5;margin-top:5px}
 .danger-text{color:#b00020}
-@media(max-width:520px){.check-grid{grid-template-columns:1fr}.management-nav{grid-template-columns:1fr 1fr 1fr}}
+@media(max-width:520px){.check-grid{grid-template-columns:1fr}.management-nav{grid-template-columns:1fr 1fr}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -232,6 +232,15 @@ button{position:relative;z-index:5;pointer-events:auto;-webkit-user-select:none;
   flex:0 0 auto;
 }
 .mgmt-row .small-btn{min-width:82px}
+.region-admin-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 66px;
+  gap:7px;
+  align-items:center;
+  padding:9px 0;
+  border-top:1px solid #eee;
+}
+.region-name-edit{height:42px;min-width:0}
 .zone-admin-row{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) 125px 66px;
@@ -283,6 +292,7 @@ button{position:relative;z-index:5;pointer-events:auto;-webkit-user-select:none;
   white-space:nowrap;
 }
 @media(max-width:520px){
+  .region-admin-row{grid-template-columns:minmax(0,1fr) 58px}
   .zone-admin-row{grid-template-columns:minmax(0,1fr) 104px 58px}
   .type-admin-row{grid-template-columns:minmax(0,1fr) 70px}
   .question-score-row{grid-template-columns:48px minmax(65px,1fr) 88px 60px}
@@ -454,9 +464,21 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
 <section id="managePage" class="page">
   <div id="backManage" class="back">‹ 처음으로</div>
   <div class="management-nav">
-    <button id="mgmtZoneTab" class="active" type="button">구역 관리</button>
+    <button id="mgmtRegionTab" class="active" type="button">권역 관리</button>
+    <button id="mgmtZoneTab" type="button">구역 관리</button>
     <button id="mgmtCatTab" type="button">평가항목 관리</button>
     <button id="mgmtTypeTab" type="button">유형별 평가설정</button>
+  </div>
+
+  <div id="mgmtRegionAdmin" class="card">
+    <div class="mgmt-head"><div class="title">권역 관리</div><button id="saveRegionMgmtBtn" class="mgmt-save-btn" type="button">저장하기</button></div>
+    <div class="help">권역을 추가하거나 이름을 수정할 수 있습니다. 권역 이름을 변경하면 해당 권역의 구역도 그대로 유지됩니다.</div>
+    <div class="mgmt-row">
+      <input id="newRegionName" class="grow" placeholder="예: F권역">
+      <button id="addRegionBtn" class="small-btn primary-btn" type="button">권역 추가</button>
+    </div>
+    <div id="regionAdminList"></div>
+    <div class="help" style="margin-top:12px">※ 구역이 등록된 권역은 삭제할 수 없습니다. 먼저 해당 권역의 구역을 삭제한 후 권역을 삭제하세요.</div>
   </div>
 
   <div id="mgmtZone" class="card">
@@ -506,7 +528,6 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
     <div class="title">평가조회</div>
     <div class="record-toolbar">
       <select id="recordMonth"><option value="ALL">전체 월</option></select>
-      <button id="exportExcelBtn" class="export-btn" type="button">엑셀로 내보내기</button>
     </div>
     <div id="records" class="record-list"></div>
     <div class="delete-bar">
@@ -732,49 +753,60 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
       return '<div class="record"><div class="record-head"><input class="record-check" type="checkbox" data-id="'+r.id+'"><div><div class="record-title">'+escapeHTML(r.site||"구역 미상")+' . '+escapeHTML(r.date)+' . '+formatTime(r.savedAt)+'</div><div class="record-meta">피평가자: '+escapeHTML(r.evaluator||"")+'</div></div></div><div class="record-total">총점 '+escapeHTML(r.score)+'</div><details class="record-result"><summary>▶평가결과 조회</summary>'+cats+'</details><button class="delete-one" type="button" data-delete="'+r.id+'">이 평가 삭제</button></div>';
     }).join("");
   }
-  function csvCell(v){
-    const s=String(v??"").replace(/\r?\n/g," / ").trim();
-    return '"' + s.replace(/"/g,'""') + '"';
-  }
-  function exportRecordsToExcel(rows){
-    if(!rows.length){alert("내보낼 평가기록이 없습니다.");return;}
-    const header=["평가일","저장시간","권역","구역","구역유형","피평가자","총점","대분류","대분류 점수","대분류 만점","세부번호","평가항목","배점","평가점수","평가기준"];
-    const lines=[header.map(csvCell).join(",")];
-    rows.forEach(r=>{
-      const cats=r.categories||{};
-      Object.keys(cats).forEach(cat=>{
-        const c=cats[cat]||{};
-        const qs=c.questions||[];
-        if(!qs.length){
-          lines.push([r.date,formatTime(r.savedAt),r.region,r.site,r.siteType,r.evaluator,r.score,cat,c.sum,c.max,"","","","",""].map(csvCell).join(","));
-        }else{
-          qs.forEach(q=>{
-            lines.push([r.date,formatTime(r.savedAt),r.region,r.site,r.siteType,r.evaluator,r.score,cat,c.sum,c.max,q.no,q.text,q.maxScore,q.score,(q.criteria||[]).join(" / ")].map(csvCell).join(","));
-          });
-        }
-      });
-    });
-    const csv="\uFEFF"+lines.join("\r\n");
-    const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
-    const a=document.createElement("a");
-    const f=recordMonth.value==="ALL"?"전체":recordMonth.value;
-    const now=new Date();
-    const stamp=now.getFullYear()+String(now.getMonth()+1).padStart(2,"0")+String(now.getDate()).padStart(2,"0");
-    a.href=URL.createObjectURL(blob);
-    a.download="모의테스트_평가기록_"+f+"_"+stamp+".csv";
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  }
-
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 
   // ---- Management UI ----
   const mgmtRegion=$("mgmtRegion"),siteAdminList=$("siteAdminList"),typeAdminList=$("typeAdminList");
+  const regionAdminList=$("regionAdminList");
   const mgmtCatSelect=$("mgmtCatSelect"),catAdminEditor=$("catAdminEditor");
   const typeSettingSelect=$("typeSettingSelect"),typeCategoryChecks=$("typeCategoryChecks");
   function refreshMgmtZone(){
     populateRegions(mgmtRegion,false); if(!mgmtRegion.value)mgmtRegion.value=Object.keys(CFG.zones)[0]||"";
     renderSiteAdmin();renderTypeAdmin();
+  }
+  function renderRegionAdmin(){
+    const names=Object.keys(CFG.zones);
+    regionAdminList.innerHTML=names.map(r=>'<div class="region-admin-row">'+
+      '<input class="region-name-edit" data-old-region="'+escapeHTML(r)+'" value="'+escapeHTML(r)+'" aria-label="권역 이름">'+
+      '<button class="small-btn danger-btn region-del" data-region="'+escapeHTML(r)+'" type="button">삭제</button>'+
+      '</div>').join("");
+
+    regionAdminList.querySelectorAll(".region-name-edit").forEach(el=>{
+      el.addEventListener("change",()=>{
+        const old=el.dataset.oldRegion, n=el.value.trim();
+        if(!n || n===old){el.value=old;return;}
+        if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){
+          alert("이미 있는 권역입니다."); el.value=old; return;
+        }
+        const next={};
+        Object.keys(CFG.zones).forEach(k=>{next[k===old?n:k]=CFG.zones[k];});
+        CFG.zones=next;
+        refreshMgmtZone();
+        renderRegionAdmin();
+        refreshEvalRegions();
+      });
+    });
+
+    regionAdminList.querySelectorAll(".region-del").forEach(el=>{
+      el.addEventListener("click",()=>{
+        const r=el.dataset.region;
+        if((CFG.zones[r]||[]).length){
+          alert("구역이 등록된 권역은 삭제할 수 없습니다. 먼저 해당 권역의 구역을 삭제해주세요.");
+          return;
+        }
+        if(Object.keys(CFG.zones).length<=1){alert("최소 1개의 권역은 유지해야 합니다.");return;}
+        requestDelete(r+"을(를) 정말 삭제하겠습니까?",()=>{
+          delete CFG.zones[r];
+          refreshMgmtZone(); renderRegionAdmin(); refreshEvalRegions();
+        });
+      });
+    });
+  }
+  function refreshEvalRegions(){
+    const old=region.value;
+    populateRegions(region,true);
+    if(CFG.zones[old]) region.value=old;
+    populateEvalSites();
   }
   function renderSiteAdmin(){
     const r=mgmtRegion.value;
@@ -1003,13 +1035,18 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
     site.disabled=false;if((CFG.zones[region.value]||[]).includes(old))site.value=old;resetEval();
   }
 
+  $("mgmtRegionTab").onclick=()=>showMgmtTab("region");
   $("mgmtZoneTab").onclick=()=>showMgmtTab("zone");
   $("mgmtCatTab").onclick=()=>showMgmtTab("cat");
   $("mgmtTypeTab").onclick=()=>showMgmtTab("type");
   function showMgmtTab(t){
     mgmtTab=t;
-    $("mgmtZone").style.display=t==="zone"?"block":"none";$("mgmtCat").style.display=t==="cat"?"block":"none";$("mgmtType").style.display=t==="type"?"block":"none";
-    [["mgmtZoneTab","zone"],["mgmtCatTab","cat"],["mgmtTypeTab","type"]].forEach(([id,x])=>$(id).classList.toggle("active",t===x));
+    $("mgmtRegionAdmin").style.display=t==="region"?"block":"none";
+    $("mgmtZone").style.display=t==="zone"?"block":"none";
+    $("mgmtCat").style.display=t==="cat"?"block":"none";
+    $("mgmtType").style.display=t==="type"?"block":"none";
+    [["mgmtRegionTab","region"],["mgmtZoneTab","zone"],["mgmtCatTab","cat"],["mgmtTypeTab","type"]].forEach(([id,x])=>$(id).classList.toggle("active",t===x));
+    if(t==="region"){renderRegionAdmin();refreshMgmtZone();}
     if(t==="zone")refreshMgmtZone();if(t==="cat")refreshMgmtCats();if(t==="type")renderTypeSetting();
     window.scrollTo(0,0);
   }
@@ -1028,8 +1065,8 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
   function discardMgmtDraft(){
     if(mgmtSnapshot) CFG=cloneConfig(mgmtSnapshot);
     mgmtSnapshot=null; mgmtEditing=false;
-    refreshMgmtZone(); refreshMgmtCats(); renderTypeSetting();
-    populateEvalSites(); populateCats();
+    refreshMgmtZone(); renderRegionAdmin(); refreshMgmtCats(); renderTypeSetting();
+    refreshEvalRegions(); populateCats();
   }
   function commitMgmtDraft(tab){
     // 저장 버튼을 누른 순간에만 설정을 영구 저장합니다.
@@ -1084,6 +1121,15 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
 
   mgmtRegion.addEventListener("change",renderSiteAdmin);
 
+  $("addRegionBtn").onclick=()=>{
+    const n=$("newRegionName").value.trim();
+    if(!n){alert("권역 이름을 입력해주세요.");return;}
+    if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){alert("이미 있는 권역입니다.");return;}
+    CFG.zones[n]=[];
+    $("newRegionName").value="";
+    refreshMgmtZone(); renderRegionAdmin(); refreshEvalRegions();
+  };
+
   $("addSiteBtn").onclick=()=>{
     const r=mgmtRegion.value,n=$("newSiteName").value.trim();if(!r||!n)return;
     if((CFG.zones[r]||[]).includes(n)){alert("이미 있는 구역입니다.");return;}
@@ -1114,6 +1160,7 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
   typeSettingSelect.onchange=onTypeSettingChange;
   typeSettingSelect.oninput=onTypeSettingChange;
 
+  $("saveRegionMgmtBtn").onclick=()=>commitMgmtDraft("권역 관리");
   $("saveZoneMgmtBtn").onclick=()=>commitMgmtDraft("구역 관리");
   $("saveCatMgmtBtn").onclick=()=>commitMgmtDraft("평가항목 관리");
   $("saveTypeMgmtBtn").onclick=()=>{
@@ -1124,10 +1171,12 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
   };
 
   // Initial form
-  dateEl.value=today();Object.keys(CFG.zones).forEach(x=>region.add(new Option(x,x)));
+  dateEl.value=today();
+  populateRegions(region,true);
+  renderRegionAdmin();
   region.addEventListener("change",populateEvalSites);
   site.addEventListener("change",()=>{resetEval();populateCats();});
-  function goStart(){dateEl.value=today();page(evalPage);populateEvalSites();populateCats();}
+  function goStart(){dateEl.value=today();page(evalPage);refreshEvalRegions();populateCats();}
   function goView(){drawRecords();page(viewPage);}
   function goManage(){beginMgmtDraft();page(managePage);showMgmtTab("zone");}
   $("startBtn").onclick=goStart;
@@ -1138,11 +1187,6 @@ const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주
   $("backManage").onclick=leaveManagement;
   finish.onclick=finishEvaluation;
   recordMonth.addEventListener("change",drawRecords);
-  $("exportExcelBtn").addEventListener("click",()=>{
-    const f=recordMonth.value,all=loadRecords();
-    const list=f==="ALL"?all:all.filter(r=>monthKey(r.date)===f);
-    exportRecordsToExcel(list);
-  });
   recordsEl.addEventListener("click",e=>{
     const del=e.target.closest(".delete-one");if(del){const id=Number(del.dataset.delete);if(confirm("이 평가를 삭제할까요?")){saveRecords(loadRecords().filter(r=>r.id!==id));drawRecords();}}
   });
