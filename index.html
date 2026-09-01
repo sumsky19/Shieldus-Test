@@ -83,8 +83,6 @@ select:disabled{background:#eceef1;color:#999}
 .help{font-size:12px;color:#777;line-height:1.5;margin-top:5px}
 .danger-text{color:#b00020}
 @media(max-width:520px){.check-grid{grid-template-columns:1fr}.management-nav{grid-template-columns:1fr 1fr}}
-.management-nav{display:flex;gap:8px;flex-wrap:wrap}
-.management-nav button{white-space:nowrap}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -243,7 +241,6 @@ button{position:relative;z-index:5;pointer-events:auto;-webkit-user-select:none;
   border-top:1px solid #eee;
 }
 .region-name-edit{height:42px;min-width:0}
-.region-rename-btn{height:42px;min-width:66px;padding:0 10px}
 /* 권역별 배정 구역: 구역명과 X 버튼을 한 줄 우측 정렬 */
 .region-assigned-row{
   display:grid;
@@ -500,14 +497,6 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
     <button id="mgmtZoneTab" type="button">구역 관리</button>
     <button id="mgmtCatTab" type="button">평가항목 관리</button>
     <button id="mgmtTypeTab" type="button">유형별 평가설정</button>
-      <button id="exportSettingsBtn" type="button">설정 내보내기</button>
-      <button id="importSettingsBtn" type="button">설정 불러오기</button>
-      <button id="saveBaselineBtn" type="button">기본값 저장</button>
-  </div>
-  <div class="help" style="margin:10px 0 0;">
-    「설정 내보내기」는 현재 설정을 JSON 파일로 저장하고,
-    「설정 불러오기」는 저장된 JSON 설정을 적용합니다.
-    「기본값 저장」은 현재 설정을 앱의 초기 기본값으로 지정합니다.
   </div>
 
   <div id="mgmtRegionAdmin" class="card">
@@ -589,7 +578,7 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
   </div>
 </div>
 <script>
-const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현관","P&T5부현관","P&T5 UT"],"B권역":["TSV 주현관","TSV UT","WT 부현관","WT 주현관"],"C권역":["기술지원센터 주현관","기술지원 3F F/S LAB","기술지원 4F 모델샵","기술지원센터 6F","QRT 검색대"],"D권역":["분석측정센터","M10A주현관","M10A UT","R2 주현관","FSG검색대","통합자재창고"],"E권역":["M14 1CORE UT","M14 2CORE UT","M14 3CORE UT","M14 FAB 주현관","SUPEX Center 주현관","SUPEX Center 부현관","SUPEX Center 3F","SUPEX Center 9F"],"F권역":["M14 8CORE UT","M14 9CORE UT","M14 10CORE UT","R&D 센터","R3 주현관","R3 UT"],"G권역":["P&T1 주현관","P&T1 부현관","P&T1 2F LAB","P&T1 5F LAB","P&T1 5F SSD LAB","P&T1 하역장"],"H권역":["M10C 주현관","M10C 1F LAB","M10C UT","P&T4 주현관","P&T4 8UT","P&T4 11UT"],"I권역":["M16 주현관","M16 2CORE 부현관","M16 2CORE UT","M16 3CORE UT","M16 부품자동화창고","SKHU"],"J권역":["M16 4CORE 부현관","M16 5CORE 부현관","M16 5CORE UT","M16 6CORE 부현관","M16 6CORE UT"]},"categories":{"문서감응기 검색":[{"no":1,"text":"추가검색을 위한 사유 설명 및 추가검색대로 이동하기전 협조 안내하였는가?","items":[]},{"no":2,"text":"문서 검색을 위하여 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["이벤트 발생자에 대해 문서감응기 감응 물품 소지여부를 확인 하였는가? - 보안문서, 연구개발 시료봉투, 보안USB 소지 여부 확인","소지하고 있는 문서 또는 휴대폰이 없는지 확인하고 있을 경우 신체에서 분리시 후 재통과 요청","재통과 요청은 2회까지 시행하며, 다른 Lane으로 재통과 시에도 이벤트가 발생되면 추가검색을 안내하는가?","반출허가된 문서는 점검 후 문서감응기 우회 전달 하는가?"]},{"no":3,"text":"문서 반출입 절차에 대해 숙지하고 있는가?","items":["반출입증 제시 요청, 건물간 이동 모바일 처리 진행 여부를 정상적으로 진행하였는가?","사원증 태깅 후 본인 확인 여부 및 모바일 기기 사용법을 정상적으로 진행 하였는가?","포장시 포장 기준을 준수 하였는가?"]},{"no":4,"text":"위반문서의 내용을 확인하여 단순위규와 적발보고서 처리를 판단할 수 있는가?","items":["반출허가된 문서의 정의를 숙지하고 있는가? (개인문서 또는 보안문서 정의)","문서의 중요도를 판단하여 회수 또는 분출할 수 있는 역량이 되는가?","경위서 및 적발보고서 또는 반조장 보고체계가 숙지되어 있는가?"]},{"no":5,"text":"위규사항에 대한 설명과 올바른 절차를 안내하였는가?","items":["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]},{"no":6,"text":"보안위규 문의에 대해 안내(대처)할 수 있는가?","items":["시정계획서 제출 기한에 대해 알고 있는가?(14일)"]},{"no":7,"text":"위규자의 돌발상황/행동 시(보안검색 불용, 보안검색 도주, 보안검색 불합리만 제기) 후속절차에 대해 SOP숙지하고 있는가?","items":[]},{"no":8,"text":"E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?","items":[]},{"no":9,"text":"휴대폰 포렌식 검색을 위한 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["보안스티커의 올바른 부착 방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?","포렌식 이행 전 개인정보 수집 및 이용동의서를 안내하였는가?","휴대폰 포렌식 검사에 대해 안내할 수 있는가?- 구성원, 외부인 포렌식 검사 시간","휴대폰 포렌식 프로그램을 정상휴대폰 OS 별 포렌식 사용방법을 숙지하고 있는가? (iOS/ 안드로이드)","포렌식 검색 결과에 따른 위규 등록 시 1차/2차를 구분할 수 있는가?","포렌식 인식 불가 시 로컬 임시서버를 사용 할 수 있는가?"]},{"no":10,"text":"장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?","items":["관리자에게 장애 내용 공유","점검중 팻말 설치 또는 추가 조치"]},{"no":11,"text":"반입금지 품목에 대해 숙지하고 있는가?","items":["스파이성 물품에 대한 종류를 인지하고 있는가?","저장매체로 의심되는 경우 물품반출입 확인서 작성에 대한 안내를 하고 있는가?","구성원과 외부인 차이점(예시: 노트북의 경우 구성원은 단지내 반입은 가능, 외부인은 단지내 반입 불가"]},{"no":12,"text":"고객응대, 근무자세(상태)을 바르게 실행하고 있는가?","items":["업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?","두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?"]}],"X-RAY 검색":[{"no":1,"text":"추가검색을 위한 사유 설명 및 추가검색대로 이동하기전 협조 안내하였는가?","items":["검색대 의심물품이 감지되어 추가검색을 위해 추가검색대로 이동협조 여부"]},{"no":2,"text":"XRay상 확인필요 소지품 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?","가방 속 물품 육안검색을 위해 잠시 대상자에게 직접 개방 요청 안내하는가?","가방 속 물품 외 절차에 없는 검색요청을 하지 않는가?"]},{"no":3,"text":"저장장치 반출입 종류에 따른 보안 정책을 숙지하고 있는가?","items":["전산저장장치 종류의 반출시 EP센터 방문 안내를 하고 있는가?","전산반출증 생성일로 부터 2주 이내 반출을 진행해야 하는 내용을 숙지하고 있는가?(자동 삭제)","전산저장장치 반출입증의 장기/단기 구분으로 EP센터 포멧 여부를 안내하고 있는가?","외부인 노트북의 화상캠 보안조치 사항을 확인하고 있는가?"]},{"no":4,"text":"물품 반출입증을 정확히 해석할 수 있는가?","items":["반출증 생성일, 코드 확인 및 물품의 관리번호, S/N, 수량 등이 정확히 실제 물품과 동일한지 확인하였는가?","반출증상의 물품이 반입필요 인지 반입불요인지 확인하였는가?"]},{"no":5,"text":"위규사항에 대한 설명과 올바른 절차를 안내하였는가?","items":["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]},{"no":6,"text":"보안위규 문의에 대해 안내(대처)할 수 있는가?","items":["시정계획서 제출 기한에 대해 알고 있는가?(14일)"]},{"no":7,"text":"위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만 제기) 후속절차에 대해 SOP숙지하고 있는가?","items":[]},{"no":8,"text":"E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?","items":[]},{"no":9,"text":"휴대폰 포렌식 검색을 위한 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["보안스티커의 올바른 부착 방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?","포렌식 이행 전 개인정보 수집 및 이용동의서를 안내하였는가?","휴대폰 포렌식 검사에 대해 안내할 수 있는가? - 구성원, 외부인 포렌식 검사 시간","휴대폰 포렌식 프로그램을 정상휴대폰 OS 별 포렌식 사용방법을 숙지하고 있는가? (iOS / 안드로이드)","포렌식 검색 결과에 따른 위규 등록 시 1차/2차를 구분할 수 있는가?","포렌식 인식 불가 시 로컬 임시서버를 사용 할 수 있는가?"]},{"no":10,"text":"장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?","items":["관리자에게 장애 내용 공유","점검중 팻말 설치 또는 추가 조치"]},{"no":11,"text":"반입금지 품목에 대해 숙지하고 있는가?","items":["스파이성 물품에 대한 종류를 인지하고 있는가?","저장매체로 의심되는 경우 물품반출입 확인서 작성에 대한 안내를 하고 있는가?","구성원과 외부인 차이점(예시: 노트북의 경우 구성원은 단지내 반입은 가능, 외부인은 단지내 반입 불가"]},{"no":12,"text":"고객응대, 근무자세(상태)올바르게 실행하고 있는가?","items":["업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?"]}],"MD검색":[{"no":1,"text":"추가검색을 위한 사유 설명 및 추가검색대로 이동하기 전 협조 안내하였는가?","items":["검색대 의심물질이 감지되어 추가검색을 위해 추가검색대로의 이동 협조 여부"]},{"no":2,"text":"휴대용 핸드스캐너 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?","휴대용 핸드스캐너 검색 전 보안요원의 행동 모션으로 검색대상자의 이해를 돕는가? 양발, 양팔을 벌리고 손바닥은 편 상태로 안내","휴대용 핸드스캐너 사용방법을 숙지하여 신속, 정확하게 검색하였는가?"]},{"no":3,"text":"저장장치 반출입 종류에 따른 보안 정책을 숙지하고 있는가?","items":["전산저장장치 종류의 반출시 EP센터 방문 안내를 하고 있는가?","전산반출증 생성일로 부터 2주 이내 반출을 진행해야 하는 내용을 숙지하고 있는가?(자동 삭제)","전산저장장치 반출입증의 장기/단기 구분으로 EP센터 포멧 여부를 안내하고 있는가?","외부인 노트북의 화상캠 보안조치 사항을 확인하고 있는가?"]},{"no":4,"text":"반입금지물품 보관함에 대해 안내할 수 있는가?","items":["반입금지물품 보관함 보관 가능 물품에 대해 알고 있는가?- USB, CD, 노트북 등 전산저장장치","반입금지물품 보관함 위반 종류에 대해 알고 있는가? - 24시간 경과, 반입금지 물품 외 보관"]},{"no":5,"text":"위규사항에 대한 설명과 올바른 절차를 안내하였는가?","items":["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]},{"no":6,"text":"보안위규 문의에 대해 안내(대처)할 수 있는가?","items":["시정계획서 제출 기한에 대해 알고 있는가?(14일)"]},{"no":7,"text":"위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만 제기) 후속절차에 대해 SOP숙지하고 있는가?","items":[]},{"no":8,"text":"E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?","items":[]},{"no":9,"text":"휴대폰 포렌식 검색을 위한 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["보안스티커의 올바른 부착 방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?","포렌식 이행 전 개인정보 수집 및 이용동의서를 안내하였는가?","휴대폰 포렌식 검사에 대해 안내할 수 있는가? - 구성원, 외부인 포렌식 검사시간","휴대폰 포렌식 프로그램을 정상휴대폰 OS 별 포렌식 사용방법을 숙지하고 있는가? (IOS/ 안드로이드)","포렌식 검색 결과에 따른 위규 등록 시 1차/2차를 구분할 수 있는가?","포렌식 인식 불가 시 로컬 임시서버를 사용 할 수 있는가?"]},{"no":10,"text":"장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?","items":["관리자에게 장애 내용 공유","점검중 팻말 설치 또는 추가 조치"]},{"no":11,"text":"반입금지 품목에 대해 숙지하고 있는가?","items":["스파이성 물품에 대한 종류를 인지하고 있는가?","저장매체로 의심되는 경우 물품반출입 확인서 작성에 대한 안내를 하고 있는가?","구성원과 외부인 차이점(예시: 노트북의 경우 구성원은 단지내 반입은 가능, 외부인은 단지내 반입 불가"]},{"no":12,"text":"고객응대, 근무자세(상태)올바르게 실행하고 있는가?","items":["두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?","업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?"]}],"물품반출입":[{"no":1,"text":"물품 반입/반출시 프로세스를 숙지하고 있는가?","items":["질문 : 건물에서 물품 반출입 프로세스를 숙지 하고 있는지?","L 답:","외곽에서 물품 반출입 프로세스를 숙지 하고 있는지?","물품반","물품반출입시 검수 하는 사유를 알고 있는지?","물품 검수시 품명, 수량, S/N 등을 확인하고 있는가?","대량물품 검수시 확인 어떻게 확인하고 있는가?(샘플링 or 전부 확인)","물품 반출시 신청항목에 없는 물품이 포함되어 있다면 어떻게 안내를 하고 위규조치를 하고 있는가?","물품 반입시 신청항목에 없는 물품이 포함되어 있다면 추가 반입신청 후 반입을 안내 하고 있는가?"]},{"no":2,"text":"전산기기 반입/반출시 프로세를 숙지하고 있는가?","items":["전산기기 반출시 확인 해야 하는 사항은?","전산기기 반입시 확인 해야 하는 사항은?","전산기기 반출입 오처리시 조치해야 할 사항은?","전신기기 반출시 품명, 수량, S/N 등을 확인하고 있는가?","전산가기 반입시 품명, 수량, S/N 등을 확인하고 있는가?","상시반출스티커가 부착이 되어 있다면 어떻게 지원을 진행하고 있는가?","전산기기 반출입시 반출증 및 상시반출스티커 없이 반출입시 어떻게 안내를 하고 있는가?"]},{"no":3,"text":"Wafer 반입/반출시 프로세스를 숙지하고 있는가?","items":["Patten or Non-Patten Wafer를 확인하여 반출입 진행을 하고 있는지?","Wafer 반출시 EA 표기가 아닌 SET로 표기되어 반출이 된다면 어떻게 안내를 해야 하는지?"]},{"no":4,"text":"시료 변형 여부 확인 후 반입/반출 프로세스를 숙지하고 있는가?","items":["시료 변형 여부 확인 후 반출입을 지원하고 있는가?"]},{"no":5,"text":"문서 반입/반출시 프로세스를 숙지하고 있는가?","items":["보안문서 반출입 절차를 숙지 하고 있는가?"]},{"no":6,"text":"사내 우체국을 통한 문서 반출 처리 프로세스를 숙지하고 있는가?","items":["물품반출입 SOP 중 사내 우체국을 통한 문서 반출입 프로세스를 숙지하여 이행하고 있는지?(우편물 의뢰서)"]},{"no":7,"text":"모바일기기 건물간이동 반입/반출시 프로세스를 숙지하고 있는가?","items":["업무용모바일기기 스티커 및 SSM 여부를 확인하여 반출입 지원을 하고 있는지?","업무용모바일기기 + 반출금지 스티커 부착 및 SSM 설치가 안되어 있다면 안내해야 하는 사항을 알고 있는지?","문서 건물간이동 반입/반출 프로세스를 숙지하고 있는가?"]},{"no":8,"text":"문서 건물간 이동시 프로세스를 숙지하고 있는지?","items":["문서 건물간 이동 시 프로세스를 숙지하고 있는가?","단순 개인 문서의 경우 반출입시 어떻게 지원을 하면 되는지?","건물간 이동 요청시 문서 봉인 기준을 준수하고 있는지?"]},{"no":9,"text":"전산기기 건물간이동 반입/반출시 프로세를 숙지하고 있는가?","items":["전산기기 건물간이동시 반출입 프로세스를 준수하여 지원하고 있는가?","전산기기 건물간이동 요청시 확인 해야 하는 사항은 어떻한 부분을 확인 해야 하는지?","구성원 및 외부인 건물간 이동시 확인 해야 하는 사항을 알고 있는가?"]},{"no":10,"text":"전산저장장치 건물간이동 반입/반출 프로세를 숙지하고 있는가?","items":["구성원 전산저정장치 건물간 이동시 확인 사항 및 봉인 방법에 대하여 숙지하고 있는가?","외부인 전산저항장치 건물간 이동시 확인 사항 및 봉인 방법에 대하여 숙지하고 있는가?","전산 저장장치 건물간 이동 불가한 경우 안내 방법을 알고 있는가?"]},{"no":11,"text":"비보안구역 물품 반출입 프로세를 숙지하고 있는가?","items":["비보안구역으로 물품을 건물간 이동시 어떻게 조치를 해야 하지 숙지 하고 있는지?","비보안구역으로 물품을 반출 후 다시 반출을 진행한 건물로 반입할 경우 어떻게 처리 해야 하는가?"]}],"랩실 검색":[{"no":1,"text":"추가검색을 위한 사유 설명 및 추가검색대로 이동하기 전 협조 안내하였는가?","items":["검색대 의심물질이 감지되어 추가검색을 위해 추가검색대로의 이동 협조 여부"],"maxScore":10},{"no":2,"text":"휴대용 핸드스캐너 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?","휴대용 핸드스캐너 검색 전 보안요원의 행동 모션으로 검색대상자의 이해를 돕는가? - 양발, 양팔을 벌리고 손바닥은 편 상태로 안내","휴대용 핸드스캐너 사용방법을 숙지하여 신속, 정확하게 검색하였는가?"],"maxScore":10},{"no":3,"text":"랩실 검색 절차방법을 숙지하고 있는가?","items":["신체 하단 부위 알람 발생시 협조요청을 하는가?"],"maxScore":10},{"no":4,"text":"X-Ray상 확인필요 소지품 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?","가방 속 물품 육안검색을 위해 잠시 대상자에게 직접 개방 요청 안내하는가?","가방 속 물품 외 절차에 없는 검색요청을 하지 않는가?"],"maxScore":10},{"no":5,"text":"반입금지물품 보관함에 대해 안내할 수 있는가?","items":["반입금지물품 보관함 보관 가능 물품에 대해 알고 있는가?- USB, CD, 노트북 등 전산저장장치","반입금지물품 보관함 위반 종류에 대해 알고 있는가? - 24시간 경과, 반입금지 물품 외 보관"],"maxScore":10},{"no":6,"text":"위규사항에 대한 설명과 올바른 절차를 안내하였는가?","items":["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"],"maxScore":10},{"no":7,"text":"위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만 제기) 후속절차에 대해 SOP숙지하고 있는가?","items":[],"maxScore":10},{"no":8,"text":"E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?","items":[],"maxScore":10},{"no":9,"text":"장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?","items":["관리자에게 장애 내용 공유","점검중 팻말 설치 또는 추가 조치"],"maxScore":10},{"no":10,"text":"고객응대, 근무자세(상태)올바르게 실행하고 있는가?","items":["업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?","두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?"],"maxScore":10}],"우회출입구 검색":[{"no":1,"text":"우회출입구 추가검색을 위한 사유 설명 및 협조 안내하였는가?","items":["우회출입구 출문 시 휴대폰 미소지로 인한 추가검색 협조 여부","가방, 소지품 내 의심물질이 감지되어 추가검색을 위한 협조 여부"],"maxScore":10},{"no":2,"text":"휴대용 핸드스캐너 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?","items":["소지하고 있는 모든 소지품과 가방을 임시보관대에 올려주시기를 안내하는 가?","휴대용 핸드스캐너 검색 전 보안요원의 행동 모션으로 검색대상자의 이해를 돕는가? - 양 발, 양 - 팔을 벌리고 손바닥은 편 상태로 안내","휴대용 핸드스캐너 사용방법을 숙지하여 신속, 정확하게 검색하였는가?"],"maxScore":10},{"no":3,"text":"우회출입구 검색절차를 숙지하고 있는가?","items":["꼬리물기로 출입한 경우 대응 방법(안내멘트)","물품반출입 시 검수하는 사유를 알고 있는지?","물품 검수 시 품명, 수량, S/N 등을 확인하고 있는가?","반입금지물품 보관함에 대해 안내할 수 있는가?","물품 반출시 신청항목에 없는 물품이 포함되어 있다면 어떻게 안내를 하고 위규조치를 하고 있는가?"],"maxScore":10},{"no":4,"text":"반입금지물품 보관함에 대해 안내할 수 있는가?","items":["반입금지물품 보관함 보관 가능 물품에 대해 알고 있는가? - USB, CD, 노트북 등 전산저장장치","반입금지물품 보관함 위반 종류에 대해 알고 있는가? - 24시간 경과, 반입금지 물품 외 보관"],"maxScore":10},{"no":5,"text":"우회출입구 휴대폰 포렌식 검색을 위한 사전안내 및 절차를 숙지하고 있는가?","items":["보안스티커의 올바른 부착방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?","포렌식 진행을 위해 가까운 검색대 숙지 및 안내하였는가?"],"maxScore":10},{"no":6,"text":"위규사항에 대한 올바른 절차를 안내하였는가?","items":["보안시스템 우회발생(꼬리물기) 발생 시 응대 절차 및 안내멘트","무단출입/보안검색 우회 발생 시 응대 절차 및 안내멘트"],"maxScore":10},{"no":7,"text":"위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만제기) 후속절차에 대해 SOP를 숙지라고 있는가?","items":["위규자 돌발상황/행동 시 후속절차 SOP 숙지 여부"],"maxScore":10},{"no":8,"text":"E-Security 위규등록 절차 방법을 숙지하여 진행하고 있는가?","items":["E-Security 위규등록 절차 숙지여부"],"maxScore":10},{"no":9,"text":"장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?","items":["관리자에게 장애 내용 공유 여부","점검 중 안내 팻말 설치 또는 추가 조치 여부"],"maxScore":10},{"no":10,"text":"고객응대, 근무자세(상태)를 올바르게 수행하고 있는가?","items":["업무 별 대응방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?","두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?"],"maxScore":10}]}};
+const DATA={"zones": {"A권역": ["SCM주현관", "경영지원본관", "P&T5주현관", "P&T5부현관", "P&T5 UT", "TSV UT", "TSV 주현관", "WT 주현관", "WT 부현관"], "B권역": ["기술지원센터 주현관", "기술지원 3F F/S LAB", "기술지원 4F 모델샵", "기술지원센터 6F", "QRT 검색대", "분석측정센터", "M10A주현관", "M10A UT", "R2 주현관", "FSG검색대", "통합자재창고"], "C권역": ["M14 FAB 주현관", "SUPEX Center 주현관", "SUPEX Center 부현관", "SUPEX Center 3F", "SUPEX Center 9F", "M14 1CORE UT", "M14 2CORE UT", "M14 3CORE UT", "M14 8CORE UT", "M14 9CORE UT", "M14 10CORE UT", "R&D 센터", "R3 주현관", "R3 UT"], "D권역": ["P&T1 주현관", "P&T1 부현관", "P&T1 2F LAB", "P&T1 5F LAB", "P&T1 5F SSD LAB", "P&T1 하역장", "M10C 주현관", "M10C 1F LAB", "M10C UT", "P&T4 주현관", "P&T4 8UT", "P&T4 11UT"], "E권역": ["M16 주현관", "M16 2CORE 부현관", "M16 4CORE 부현관", "M16 5CORE 부현관", "M16 6CORE 부현관", "M16 부품자동화창고", "M16 2CORE UT", "M16 3CORE UT", "M16 5CORE UT", "M16 6CORE UT", "SKHU"]}, "categories": {"문서감응기 검색": [{"no": 1, "text": "추가검색을 위한 사유 설명 및 추가검색대로 이동하기전 협조 안내하였는가?", "items": []}, {"no": 2, "text": "문서 검색을 위하여 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["이벤트 발생자에 대해 문서감응기 감응 물품 소지여부를 확인 하였는가? - 보안문서, 연구개발 시료봉투, 보안USB 소지 여부 확인", "소지하고 있는 문서 또는 휴대폰이 없는지 확인하고 있을 경우 신체에서 분리시 후 재통과 요청", "재통과 요청은 2회까지 시행하며, 다른 Lane으로 재통과 시에도 이벤트가 발생되면 추가검색을 안내하는가?", "반출허가된 문서는 점검 후 문서감응기 우회 전달 하는가?"]}, {"no": 3, "text": "문서 반출입 절차에 대해 숙지하고 있는가?", "items": ["반출입증 제시 요청, 건물간 이동 모바일 처리 진행 여부를 정상적으로 진행하였는가?", "사원증 태깅 후 본인 확인 여부 및 모바일 기기 사용법을 정상적으로 진행 하였는가?", "포장시 포장 기준을 준수 하였는가?"]}, {"no": 4, "text": "위반문서의 내용을 확인하여 단순위규와 적발보고서 처리를 판단할 수 있는가?", "items": ["반출허가된 문서의 정의를 숙지하고 있는가? (개인문서 또는 보안문서 정의)", "문서의 중요도를 판단하여 회수 또는 분출할 수 있는 역량이 되는가?", "경위서 및 적발보고서 또는 반조장 보고체계가 숙지되어 있는가?"]}, {"no": 5, "text": "위규사항에 대한 설명과 올바른 절차를 안내하였는가?", "items": ["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]}, {"no": 6, "text": "보안위규 문의에 대해 안내(대처)할 수 있는가?", "items": ["시정계획서 제출 기한에 대해 알고 있는가?(14일)"]}, {"no": 7, "text": "위규자의 돌발상황/행동 시(보안검색 불용, 보안검색 도주, 보안검색 불합리만 제기) 후속절차에 대해 SOP숙지하고 있는가?", "items": []}, {"no": 8, "text": "E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?", "items": []}, {"no": 9, "text": "휴대폰 포렌식 검색을 위한 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["보안스티커의 올바른 부착 방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?", "포렌식 이행 전 개인정보 수집 및 이용동의서를 안내하였는가?", "휴대폰 포렌식 검사에 대해 안내할 수 있는가?- 구성원, 외부인 포렌식 검사 시간", "휴대폰 포렌식 프로그램을 정상휴대폰 OS 별 포렌식 사용방법을 숙지하고 있는가? (iOS/ 안드로이드)", "포렌식 검색 결과에 따른 위규 등록 시 1차/2차를 구분할 수 있는가?", "포렌식 인식 불가 시 로컬 임시서버를 사용 할 수 있는가?"]}, {"no": 10, "text": "장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?", "items": ["관리자에게 장애 내용 공유", "점검중 팻말 설치 또는 추가 조치"]}, {"no": 11, "text": "반입금지 품목에 대해 숙지하고 있는가?", "items": ["스파이성 물품에 대한 종류를 인지하고 있는가?", "저장매체로 의심되는 경우 물품반출입 확인서 작성에 대한 안내를 하고 있는가?", "구성원과 외부인 차이점(예시: 노트북의 경우 구성원은 단지내 반입은 가능, 외부인은 단지내 반입 불가"]}, {"no": 12, "text": "고객응대, 근무자세(상태)을 바르게 실행하고 있는가?", "items": ["업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?", "두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?"]}], "X-RAY 검색": [{"no": 1, "text": "추가검색을 위한 사유 설명 및 추가검색대로 이동하기전 협조 안내하였는가?", "items": ["검색대 의심물품이 감지되어 추가검색을 위해 추가검색대로 이동협조 여부"]}, {"no": 2, "text": "XRay상 확인필요 소지품 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?", "가방 속 물품 육안검색을 위해 잠시 대상자에게 직접 개방 요청 안내하는가?", "가방 속 물품 외 절차에 없는 검색요청을 하지 않는가?"]}, {"no": 3, "text": "저장장치 반출입 종류에 따른 보안 정책을 숙지하고 있는가?", "items": ["전산저장장치 종류의 반출시 EP센터 방문 안내를 하고 있는가?", "전산반출증 생성일로 부터 2주 이내 반출을 진행해야 하는 내용을 숙지하고 있는가?(자동 삭제)", "전산저장장치 반출입증의 장기/단기 구분으로 EP센터 포멧 여부를 안내하고 있는가?", "외부인 노트북의 화상캠 보안조치 사항을 확인하고 있는가?"]}, {"no": 4, "text": "물품 반출입증을 정확히 해석할 수 있는가?", "items": ["반출증 생성일, 코드 확인 및 물품의 관리번호, S/N, 수량 등이 정확히 실제 물품과 동일한지 확인하였는가?", "반출증상의 물품이 반입필요 인지 반입불요인지 확인하였는가?"]}, {"no": 5, "text": "위규사항에 대한 설명과 올바른 절차를 안내하였는가?", "items": ["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]}, {"no": 6, "text": "보안위규 문의에 대해 안내(대처)할 수 있는가?", "items": ["시정계획서 제출 기한에 대해 알고 있는가?(14일)"]}, {"no": 7, "text": "위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만 제기) 후속절차에 대해 SOP숙지하고 있는가?", "items": []}, {"no": 8, "text": "E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?", "items": []}, {"no": 9, "text": "휴대폰 포렌식 검색을 위한 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["보안스티커의 올바른 부착 방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?", "포렌식 이행 전 개인정보 수집 및 이용동의서를 안내하였는가?", "휴대폰 포렌식 검사에 대해 안내할 수 있는가? - 구성원, 외부인 포렌식 검사 시간", "휴대폰 포렌식 프로그램을 정상휴대폰 OS 별 포렌식 사용방법을 숙지하고 있는가? (iOS / 안드로이드)", "포렌식 검색 결과에 따른 위규 등록 시 1차/2차를 구분할 수 있는가?", "포렌식 인식 불가 시 로컬 임시서버를 사용 할 수 있는가?"]}, {"no": 10, "text": "장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?", "items": ["관리자에게 장애 내용 공유", "점검중 팻말 설치 또는 추가 조치"]}, {"no": 11, "text": "반입금지 품목에 대해 숙지하고 있는가?", "items": ["스파이성 물품에 대한 종류를 인지하고 있는가?", "저장매체로 의심되는 경우 물품반출입 확인서 작성에 대한 안내를 하고 있는가?", "구성원과 외부인 차이점(예시: 노트북의 경우 구성원은 단지내 반입은 가능, 외부인은 단지내 반입 불가"]}, {"no": 12, "text": "고객응대, 근무자세(상태)올바르게 실행하고 있는가?", "items": ["업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?"]}], "MD검색": [{"no": 1, "text": "추가검색을 위한 사유 설명 및 추가검색대로 이동하기 전 협조 안내하였는가?", "items": ["검색대 의심물질이 감지되어 추가검색을 위해 추가검색대로의 이동 협조 여부"]}, {"no": 2, "text": "휴대용 핸드스캐너 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?", "휴대용 핸드스캐너 검색 전 보안요원의 행동 모션으로 검색대상자의 이해를 돕는가? 양발, 양팔을 벌리고 손바닥은 편 상태로 안내", "휴대용 핸드스캐너 사용방법을 숙지하여 신속, 정확하게 검색하였는가?"]}, {"no": 3, "text": "저장장치 반출입 종류에 따른 보안 정책을 숙지하고 있는가?", "items": ["전산저장장치 종류의 반출시 EP센터 방문 안내를 하고 있는가?", "전산반출증 생성일로 부터 2주 이내 반출을 진행해야 하는 내용을 숙지하고 있는가?(자동 삭제)", "전산저장장치 반출입증의 장기/단기 구분으로 EP센터 포멧 여부를 안내하고 있는가?", "외부인 노트북의 화상캠 보안조치 사항을 확인하고 있는가?"]}, {"no": 4, "text": "반입금지물품 보관함에 대해 안내할 수 있는가?", "items": ["반입금지물품 보관함 보관 가능 물품에 대해 알고 있는가?- USB, CD, 노트북 등 전산저장장치", "반입금지물품 보관함 위반 종류에 대해 알고 있는가? - 24시간 경과, 반입금지 물품 외 보관"]}, {"no": 5, "text": "위규사항에 대한 설명과 올바른 절차를 안내하였는가?", "items": ["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]}, {"no": 6, "text": "보안위규 문의에 대해 안내(대처)할 수 있는가?", "items": ["시정계획서 제출 기한에 대해 알고 있는가?(14일)"]}, {"no": 7, "text": "위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만 제기) 후속절차에 대해 SOP숙지하고 있는가?", "items": []}, {"no": 8, "text": "E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?", "items": []}, {"no": 9, "text": "휴대폰 포렌식 검색을 위한 사전 안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["보안스티커의 올바른 부착 방법 및 SSM 정상, 이상패턴 실행 화면을 숙지하여 확인하고 있는가?", "포렌식 이행 전 개인정보 수집 및 이용동의서를 안내하였는가?", "휴대폰 포렌식 검사에 대해 안내할 수 있는가? - 구성원, 외부인 포렌식 검사시간", "휴대폰 포렌식 프로그램을 정상휴대폰 OS 별 포렌식 사용방법을 숙지하고 있는가? (IOS/ 안드로이드)", "포렌식 검색 결과에 따른 위규 등록 시 1차/2차를 구분할 수 있는가?", "포렌식 인식 불가 시 로컬 임시서버를 사용 할 수 있는가?"]}, {"no": 10, "text": "장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?", "items": ["관리자에게 장애 내용 공유", "점검중 팻말 설치 또는 추가 조치"]}, {"no": 11, "text": "반입금지 품목에 대해 숙지하고 있는가?", "items": ["스파이성 물품에 대한 종류를 인지하고 있는가?", "저장매체로 의심되는 경우 물품반출입 확인서 작성에 대한 안내를 하고 있는가?", "구성원과 외부인 차이점(예시: 노트북의 경우 구성원은 단지내 반입은 가능, 외부인은 단지내 반입 불가"]}, {"no": 12, "text": "고객응대, 근무자세(상태)올바르게 실행하고 있는가?", "items": ["두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?", "업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?"]}], "물품반출입": [{"no": 1, "text": "물품 반입/반출시 프로세스를 숙지하고 있는가?", "items": ["질문 : 건물에서 물품 반출입 프로세스를 숙지 하고 있는지?", "L 답:", "외곽에서 물품 반출입 프로세스를 숙지 하고 있는지?", "물품반", "물품반출입시 검수 하는 사유를 알고 있는지?", "물품 검수시 품명, 수량, S/N 등을 확인하고 있는가?", "대량물품 검수시 확인 어떻게 확인하고 있는가?(샘플링 or 전부 확인)", "물품 반출시 신청항목에 없는 물품이 포함되어 있다면 어떻게 안내를 하고 위규조치를 하고 있는가?", "물품 반입시 신청항목에 없는 물품이 포함되어 있다면 추가 반입신청 후 반입을 안내 하고 있는가?"]}, {"no": 2, "text": "전산기기 반입/반출시 프로세를 숙지하고 있는가?", "items": ["전산기기 반출시 확인 해야 하는 사항은?", "전산기기 반입시 확인 해야 하는 사항은?", "전산기기 반출입 오처리시 조치해야 할 사항은?", "전신기기 반출시 품명, 수량, S/N 등을 확인하고 있는가?", "전산가기 반입시 품명, 수량, S/N 등을 확인하고 있는가?", "상시반출스티커가 부착이 되어 있다면 어떻게 지원을 진행하고 있는가?", "전산기기 반출입시 반출증 및 상시반출스티커 없이 반출입시 어떻게 안내를 하고 있는가?"]}, {"no": 3, "text": "Wafer 반입/반출시 프로세스를 숙지하고 있는가?", "items": ["Patten or Non-Patten Wafer를 확인하여 반출입 진행을 하고 있는지?", "Wafer 반출시 EA 표기가 아닌 SET로 표기되어 반출이 된다면 어떻게 안내를 해야 하는지?"]}, {"no": 4, "text": "시료 변형 여부 확인 후 반입/반출 프로세스를 숙지하고 있는가?", "items": ["시료 변형 여부 확인 후 반출입을 지원하고 있는가?"]}, {"no": 5, "text": "문서 반입/반출시 프로세스를 숙지하고 있는가?", "items": ["보안문서 반출입 절차를 숙지 하고 있는가?"]}, {"no": 6, "text": "사내 우체국을 통한 문서 반출 처리 프로세스를 숙지하고 있는가?", "items": ["물품반출입 SOP 중 사내 우체국을 통한 문서 반출입 프로세스를 숙지하여 이행하고 있는지?(우편물 의뢰서)"]}, {"no": 7, "text": "모바일기기 건물간이동 반입/반출시 프로세스를 숙지하고 있는가?", "items": ["업무용모바일기기 스티커 및 SSM 여부를 확인하여 반출입 지원을 하고 있는지?", "업무용모바일기기 + 반출금지 스티커 부착 및 SSM 설치가 안되어 있다면 안내해야 하는 사항을 알고 있는지?", "문서 건물간이동 반입/반출 프로세스를 숙지하고 있는가?"]}, {"no": 8, "text": "문서 건물간 이동시 프로세스를 숙지하고 있는지?", "items": ["문서 건물간 이동 시 프로세스를 숙지하고 있는가?", "단순 개인 문서의 경우 반출입시 어떻게 지원을 하면 되는지?", "건물간 이동 요청시 문서 봉인 기준을 준수하고 있는지?"]}, {"no": 9, "text": "전산기기 건물간이동 반입/반출시 프로세를 숙지하고 있는가?", "items": ["전산기기 건물간이동시 반출입 프로세스를 준수하여 지원하고 있는가?", "전산기기 건물간이동 요청시 확인 해야 하는 사항은 어떻한 부분을 확인 해야 하는지?", "구성원 및 외부인 건물간 이동시 확인 해야 하는 사항을 알고 있는가?"]}, {"no": 10, "text": "전산저장장치 건물간이동 반입/반출 프로세를 숙지하고 있는가?", "items": ["구성원 전산저정장치 건물간 이동시 확인 사항 및 봉인 방법에 대하여 숙지하고 있는가?", "외부인 전산저항장치 건물간 이동시 확인 사항 및 봉인 방법에 대하여 숙지하고 있는가?", "전산 저장장치 건물간 이동 불가한 경우 안내 방법을 알고 있는가?"]}, {"no": 11, "text": "비보안구역 물품 반출입 프로세를 숙지하고 있는가?", "items": ["비보안구역으로 물품을 건물간 이동시 어떻게 조치를 해야 하지 숙지 하고 있는지?", "비보안구역으로 물품을 반출 후 다시 반출을 진행한 건물로 반입할 경우 어떻게 처리 해야 하는가?"]}], "랩실 검색": [{"no": 1, "text": "추가검색을 위한 사유 설명 및 추가검색대로 이동하기 전 협조 안내하였는가?", "items": ["검색대 의심물질이 감지되어 추가검색을 위해 추가검색대로의 이동 협조 여부"]}, {"no": 2, "text": "휴대용 핸드스캐너 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?", "휴대용 핸드스캐너 검색 전 보안요원의 행동 모션으로 검색대상자의 이해를 돕는가? - 양발, 양팔을 벌리고 손바닥은 편 상태로 안내", "휴대용 핸드스캐너 사용방법을 숙지하여 신속, 정확하게 검색하였는가?"]}, {"no": 3, "text": "랩실 검색 절차방법을 숙지하고 있는가?", "items": ["신체 하단 부위 알람 발생시 협조요청을 하는가?"]}, {"no": 4, "text": "X-Ray상 확인필요 소지품 검색을 위한 사전안내 및 절차에 준수하여 숙련있게 검색하는가?", "items": ["소지하고 있는 모든 소지품과 가방을 검색대에 올려주시기를 안내하는가?", "가방 속 물품 육안검색을 위해 잠시 대상자에게 직접 개방 요청 안내하는가?", "가방 속 물품 외 절차에 없는 검색요청을 하지 않는가?"]}, {"no": 5, "text": "반입금지물품 보관함에 대해 안내할 수 있는가?", "items": ["반입금지물품 보관함 보관 가능 물품에 대해 알고 있는가?- USB, CD, 노트북 등 전산저장장치", "반입금지물품 보관함 위반 종류에 대해 알고 있는가? - 24시간 경과, 반입금지 물품 외 보관"]}, {"no": 6, "text": "위규사항에 대한 설명과 올바른 절차를 안내하였는가?", "items": ["보안문서 반출입/건물간 이동 절차, 외부문서 반출입 절차"]}, {"no": 7, "text": "위규자의 돌발상황/행동 시(보안검색 불응, 보안검색 도주, 보안검색 불합리/불만 제기) 후속절차에 대해 SOP숙지하고 있는가?", "items": []}, {"no": 8, "text": "E-Security 위규등록 절차 방법을 숙지하여 진행하였는가?", "items": []}, {"no": 9, "text": "장비 장애 등 비정상 상황이 발생한 경우 정상 보고가 되었는가?", "items": ["관리자에게 장애 내용 공유", "점검중 팻말 설치 또는 추가 조치"]}, {"no": 10, "text": "고객응대, 근무자세(상태)올바르게 실행하고 있는가?", "items": ["업무별 대응 방법(검색방법, 안내멘트) 및 고객응대 시 쿠션어 등 올바른 보안용어를 사용하고 있는가?", "두발, 근무복, 안전화 착용 등 올바른 근무자세를 유지하고 있는가?"]}]}};
 (function(){
   const $=id=>document.getElementById(id);
   const home=$("homePage"), evalPage=$("evalPage"), viewPage=$("viewPage"), managePage=$("managePage");
@@ -616,26 +605,7 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
     const base=defaultConfig();
     if(!saved||typeof saved!=="object")return base;
     const out=clone(base);
-
-    // v12에서 권역 배정 기본값이 2개 권역씩 합쳐져 저장되는 문제가 있었습니다.
-    // 기존 저장값이 해당 '오배정 기본값'과 완전히 일치할 때만 자동으로 새 기본 배정으로 교정합니다.
-    // 사용자가 직접 수정한 권역 배정은 덮어쓰지 않습니다.
-    const legacyZones={
-      "A권역":["SCM주현관","경영지원본관","P&T5주현관","P&T5부현관","P&T5 UT","TSV UT","TSV 주현관","WT 부현관","WT 주현관"],
-      "B권역":["기술지원센터 주현관","기술지원 3F F/S LAB","기술지원 4F 모델샵","기술지원센터 6F","QRT 검색대","분석측정센터","M10A주현관","M10A UT","R2 주현관","FSG검색대","통합자재창고"],
-      "C권역":["M14 1CORE UT","M14 2CORE UT","M14 3CORE UT","M14 FAB 주현관","SUPEX Center 주현관","SUPEX Center 부현관","SUPEX Center 3F","SUPEX Center 9F","M14 8CORE UT","M14 9CORE UT","M14 10CORE UT","R&D 센터","R3 주현관","R3 UT"],
-      "D권역":["P&T1 주현관","P&T1 부현관","P&T1 2F LAB","P&T1 5F LAB","P&T1 5F SSD LAB","P&T1 하역장","M10C 주현관","M10C 1F LAB","M10C UT","P&T4 주현관","P&T4 8UT","P&T4 11UT"],
-      "E권역":["M16 주현관","M16 2CORE 부현관","M16 2CORE UT","M16 3CORE UT","M16 부품자동화창고","SKHU","M16 4CORE 부현관","M16 5CORE 부현관","M16 5CORE UT","M16 6CORE 부현관","M16 6CORE UT"],
-      "F권역":[],"G권역":[],"H권역":[],"I권역":[],"J권역":[]
-    };
-    const savedZones=saved.zones;
-    const isLegacy= savedZones && Object.keys(legacyZones).length===Object.keys(savedZones).length &&
-      Object.keys(legacyZones).every(r=>JSON.stringify(savedZones[r]||[])===JSON.stringify(legacyZones[r]));
-    if(isLegacy){
-      Object.keys(DATA.zones).forEach(r=>{out.zones[r]=clone(DATA.zones[r]||[]);});
-    } else if(savedZones&&typeof savedZones==="object") {
-      Object.keys(savedZones).forEach(r=>{out.zones[r]=Array.isArray(savedZones[r])?clone(savedZones[r]):[];});
-    }
+    if(saved.zones&&typeof saved.zones==="object")Object.keys(saved.zones).forEach(r=>{out.zones[r]=Array.isArray(saved.zones[r])?clone(saved.zones[r]):[];});
     if(saved.categories)out.categories=clone(saved.categories);
     const oldTypes=saved.siteTypes||{};
     Object.values(out.zones).flat().forEach(s=>{
@@ -840,65 +810,34 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
   }
   function siteRegions(siteName){return Object.keys(CFG.zones).filter(r=>(CFG.zones[r]||[]).includes(siteName));}
   function refreshMgmtZone(){renderSiteAdmin();renderRegionAssignment();}
-  function renameRegion(old,n){
-    old=String(old||"").trim();
-    n=String(n||"").trim();
-    if(!old || !n || old===n)return false;
-    if(!Object.prototype.hasOwnProperty.call(CFG.zones,old))return false;
-    if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){alert("이미 있는 권역입니다.");return false;}
-
-    // 현재 선택값을 먼저 보존한 뒤 권역 키를 변경합니다.
-    const currentMgmt=mgmtRegion.value;
-    const currentEval=region.value;
-    const next={};
-    Object.keys(CFG.zones).forEach(k=>{ next[k===old?n:k]=CFG.zones[k]; });
-    CFG.zones=next;
-
-    renderRegionAdmin();
-    refreshEvalRegions();
-
-    const nextMgmt=currentMgmt===old?n:currentMgmt;
-    if(nextMgmt && CFG.zones[nextMgmt])mgmtRegion.value=nextMgmt;
-    if(currentEval===old)region.value=n;
-    else if(CFG.zones[currentEval])region.value=currentEval;
-
-    renderRegionAssignment(nextMgmt);
-    populateEvalSites();
-    return true;
-  }
-
   function renderRegionAdmin(){
     const names=Object.keys(CFG.zones);
-    regionAdminList.innerHTML=names.map(r=>
-      '<div class="region-admin-row">'+
-        '<input class="region-name-edit" data-old-region="'+escapeHTML(r)+'" value="'+escapeHTML(r)+'" aria-label="권역 이름">'+
-        '<button class="small-btn primary-btn region-rename-btn" type="button">변경</button>'+
-      '</div>'
-    ).join("");
-
-    regionAdminList.querySelectorAll(".region-rename-btn").forEach(btn=>btn.addEventListener("click",()=>{
-      const el=btn.parentElement.querySelector(".region-name-edit");
-      const old=el.getAttribute("data-old-region")||"";
-      const n=el.value.trim();
-      if(!n || n===old){el.value=old;return;}
-      renameRegion(old,n);
+    regionAdminList.innerHTML=names.map(r=>'<div class="region-admin-row" style="grid-template-columns:minmax(0,1fr)"><input class="region-name-edit" data-old-region="'+escapeHTML(r)+'" value="'+escapeHTML(r)+'" aria-label="권역 이름"></div>').join("");
+    regionAdminList.querySelectorAll(".region-name-edit").forEach(el=>el.addEventListener("change",()=>{
+      const old=el.dataset.oldRegion,n=el.value.trim();if(!n||n===old){el.value=old;return;}
+      if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){alert("이미 있는 권역입니다.");el.value=old;return;}
+      const currentMgmt=mgmtRegion.value,currentEval=region.value,next={};
+      Object.keys(CFG.zones).forEach(k=>{next[k===old?n:k]=CFG.zones[k];});CFG.zones=next;
+      renderRegionAdmin();refreshEvalRegions();
+      if(currentMgmt===old)mgmtRegion.value=n;else if(CFG.zones[currentMgmt])mgmtRegion.value=currentMgmt;
+      if(currentEval===old)region.value=n;else if(CFG.zones[currentEval])region.value=currentEval;
+      renderRegionAssignment();populateEvalSites();
     }));
-
-    regionAdminList.querySelectorAll(".region-name-edit").forEach(el=>{
-      el.addEventListener("keydown",e=>{
-        if(e.key!=="Enter")return;
-        e.preventDefault();
-        const old=el.getAttribute("data-old-region")||"";
-        const n=el.value.trim();
-        if(!n || n===old){el.value=old;return;}
-        renameRegion(old,n);
-      });
-    });
   }
-  function renderRegionAssignment(preferredRegion){
-    const keep=preferredRegion || mgmtRegion.value,names=Object.keys(CFG.zones);
-    mgmtRegion.innerHTML=names.map(r=>'<option value="'+escapeHTML(r)+'">'+escapeHTML(r)+'</option>').join("");
-    if(keep&&CFG.zones[keep])mgmtRegion.value=keep;else if(names.length)mgmtRegion.value=names[0];
+  // 권역 선택값 자체를 다시 그리지 않고, 선택된 권역의 내용만 갱신합니다.
+  // iOS/Safari에서 change 이벤트 직후 select의 innerHTML을 재구성하면
+  // 사용자가 선택한 값이 원래 값으로 돌아가는 문제가 생길 수 있어 분리합니다.
+  function renderRegionAssignment(){
+    const keep=mgmtRegion.value,names=Object.keys(CFG.zones);
+    if(!names.includes(keep)){
+      mgmtRegion.innerHTML=names.map(r=>'<option value="'+escapeHTML(r)+'">'+escapeHTML(r)+'</option>').join("");
+      if(keep&&CFG.zones[keep])mgmtRegion.value=keep;
+      else if(names.length)mgmtRegion.value=names[0];
+    }
+    renderRegionAssignmentContent();
+  }
+
+  function renderRegionAssignmentContent(){
     const r=mgmtRegion.value,assigned=CFG.zones[r]||[],sites=allSites();
     regionSitePicker.innerHTML='<option value="">구역 선택</option>'+sites.map(s=>'<option value="'+escapeHTML(s)+'" '+(assigned.includes(s)?'disabled':'')+'>'+escapeHTML(s)+(assigned.includes(s)?' (등록됨)':'')+'</option>').join("");
     assignedSiteList.innerHTML=assigned.length?assigned.map(s=>'<div class="region-assigned-row"><span>'+escapeHTML(s)+'</span><button class="small-btn danger-btn unassign-site" data-site="'+escapeHTML(s)+'" type="button" aria-label="배정 해제">X</button></div>').join(""):'<div class="empty">이 권역에 배정된 구역이 없습니다.</div>';
@@ -1143,11 +1082,12 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
       .then(v=>{if(v==="yes")onYes();});
   }
 
-  mgmtRegion.addEventListener("change",renderRegionAssignment);
+  // 권역을 바꿀 때는 권역 선택 select 자체를 재생성하지 않습니다.
+  mgmtRegion.addEventListener("change",renderRegionAssignmentContent);
   $("addRegionBtn").onclick=()=>{
     const n=$("newRegionName").value.trim();if(!n){alert("권역 이름을 입력해주세요.");return;}
     if(Object.prototype.hasOwnProperty.call(CFG.zones,n)){alert("이미 있는 권역입니다.");return;}
-    CFG.zones[n]=[];$("newRegionName").value="";renderRegionAdmin();refreshEvalRegions();renderRegionAssignment(n);
+    CFG.zones[n]=[];$("newRegionName").value="";renderRegionAdmin();refreshEvalRegions();mgmtRegion.value=n;renderRegionAssignment();
   };
   $("assignSiteBtn").onclick=()=>{
     const r=mgmtRegion.value,s=regionSitePicker.value;if(!r||!s){alert("권역과 구역을 선택해주세요.");return;}
@@ -1186,110 +1126,6 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
     CFG.typeCategories[t]=[...typeCategoryChecks.querySelectorAll("input:checked")].map(x=>x.value);
     commitMgmtDraft("유형별 평가설정");
   };
-
-
-  // ===== 설정 내보내기 / 불러오기 / 기본값 저장 =====
-  const SETTINGS_BASELINE_KEY = "skshieldus_mocktest_settings_baseline_v11";
-
-  function cloneSettingsObject(){
-    return JSON.parse(JSON.stringify(CFG));
-  }
-
-  function downloadJson(filename, data){
-    const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-  }
-
-  function exportSettings(){
-    const snapshot = cloneSettingsObject();
-    snapshot.__meta = {
-      app:"SK쉴더스 모의테스트",
-      formatVersion:1,
-      exportedAt:new Date().toISOString()
-    };
-    const stamp = new Date().toISOString().slice(0,19).replace(/[-:T]/g,"");
-    downloadJson(`SK쉴더스_모의테스트_설정_${stamp}.json`, snapshot);
-  }
-
-  function saveBaseline(){
-    const snapshot = cloneSettingsObject();
-    snapshot.__meta = {
-      app:"SK쉴더스 모의테스트",
-      formatVersion:1,
-      savedAt:new Date().toISOString()
-    };
-    localStorage.setItem(SETTINGS_BASELINE_KEY, JSON.stringify(snapshot));
-    alert("현재 설정을 기본값으로 저장했습니다.");
-  }
-
-  function loadSavedBaseline(){
-    try{
-      const raw = localStorage.getItem(SETTINGS_BASELINE_KEY);
-      if(!raw) return null;
-      const obj = JSON.parse(raw);
-      delete obj.__meta;
-      return obj;
-    }catch(e){ return null; }
-  }
-
-  function applySettingsObject(obj){
-    CFG = normalizeConfig(obj);
-    if(!CFG.categories["우회출입구 검색"] && DATA.categories["우회출입구 검색"]){
-      CFG.categories["우회출입구 검색"] = clone(DATA.categories["우회출입구 검색"]);
-    }
-  }
-
-  function importSettingsFile(){
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json,application/json";
-    input.onchange = async ()=>{
-      const file = input.files && input.files[0];
-      if(!file) return;
-      try{
-        const obj = JSON.parse(await file.text());
-        delete obj.__meta;
-        if(!obj || typeof obj!=="object" || !obj.zones || !obj.siteTypes){
-          alert("올바른 모의테스트 설정 파일이 아닙니다.");
-          return;
-        }
-        if(!confirm("현재 설정을 불러온 설정으로 교체할까요?")) return;
-        applySettingsObject(obj);
-        localStorage.setItem(SETTINGS_BASELINE_KEY, JSON.stringify({...cloneSettingsObject(),__meta:{importedAt:new Date().toISOString()}}));
-        try{ localStorage.setItem("skshieldus_mocktest_config_v10", JSON.stringify(CFG)); }catch(e){}
-        renderRegionAdmin();
-        renderRegionAssignment();
-        renderSiteAdmin();
-        refreshEvalRegions();
-        populateRegions(region,true);
-        populateCats();
-        alert("설정을 불러왔습니다.");
-      }catch(e){
-        alert("설정 파일을 읽지 못했습니다.");
-      }
-    };
-    input.click();
-  }
-
-  $("exportSettingsBtn").onclick=exportSettings;
-  $("importSettingsBtn").onclick=importSettingsFile;
-  $("saveBaselineBtn").onclick=saveBaseline;
-
-
-  // 사용자가 지정한 기본값이 있으면 초기 CFG에 적용
-  try{
-    const __savedBaseline = loadSavedBaseline();
-    if(__savedBaseline && __savedBaseline.zones){
-      applySettingsObject(__savedBaseline);
-    }
-  }catch(e){}
 
   // Initial form
   dateEl.value=today();
