@@ -566,6 +566,7 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
     <div class="title">평가조회</div>
     <div class="record-toolbar">
       <select id="recordMonth"><option value="ALL">전체 월</option></select>
+      <button id="exportResultsBtn" type="button" class="small-btn primary-btn">엑셀 내보내기</button>
     </div>
     <div id="records" class="record-list"></div>
     <div class="delete-bar">
@@ -825,6 +826,88 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
     }).join("");
   }
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
+
+  // ===== 평가조회 전체 결과 엑셀(.xlsx) 내보내기 =====
+  // 외부 라이브러리 없이 Excel 호환 XLSX를 생성합니다.
+  // A~D: 권역/구역/구역유형/대분류, E~P: 1~12번 문항 점수, Q: 해당 대분류 총점
+  function xmlEscape(v){
+    return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
+  }
+  function excelColumnName(n){
+    let s="";
+    while(n>0){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}
+    return s;
+  }
+  function crc32(bytes){
+    let crc=0xffffffff;
+    for(let i=0;i<bytes.length;i++){
+      crc^=bytes[i];
+      for(let j=0;j<8;j++) crc=(crc>>>1)^((crc&1)?0xedb88320:0);
+    }
+    return (crc^0xffffffff)>>>0;
+  }
+  function u16(n){return new Uint8Array([n&255,(n>>>8)&255]);}
+  function u32(n){return new Uint8Array([n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255]);}
+  function concatBytes(parts){
+    const total=parts.reduce((a,b)=>a+b.length,0),out=new Uint8Array(total);
+    let p=0; parts.forEach(b=>{out.set(b,p);p+=b.length;}); return out;
+  }
+  function zipStore(files){
+    const enc=new TextEncoder(), locals=[], centrals=[]; let offset=0;
+    const now=new Date();
+    const dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|Math.floor(now.getSeconds()/2);
+    const dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+    files.forEach(f=>{
+      const name=enc.encode(f.name), data=typeof f.data==="string"?enc.encode(f.data):f.data, crc=crc32(data);
+      const local=concatBytes([new Uint8Array([0x50,0x4b,0x03,0x04]),u16(20),u16(0),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),name,data]);
+      locals.push(local);
+      const central=concatBytes([new Uint8Array([0x50,0x4b,0x01,0x02]),u16(20),u16(20),u16(0),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]);
+      centrals.push(central); offset+=local.length;
+    });
+    const cd=concatBytes(centrals), body=concatBytes(locals);
+    const eocd=concatBytes([new Uint8Array([0x50,0x4b,0x05,0x06]),u16(0),u16(0),u16(files.length),u16(files.length),u32(cd.length),u32(body.length),u16(0)]);
+    return concatBytes([body,cd,eocd]);
+  }
+  function makeXlsxSheet(rows){
+    const rowXml=rows.map((row,ri)=>{
+      const cells=row.map((v,ci)=>{
+        const ref=excelColumnName(ci+1)+(ri+1);
+        if(typeof v==="number" && Number.isFinite(v)) return `<c r="${ref}"><v>${v}</v></c>`;
+        return `<c r="${ref}" t="inlineStr"><is><t xml:space="preserve">${xmlEscape(v==null?"":v)}</t></is></c>`;
+      }).join("");
+      return `<row r="${ri+1}">${cells}</row>`;
+    }).join("");
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
+      `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:Q${rows.length}"/><sheetData>${rowXml}</sheetData></worksheet>`;
+  }
+  function exportEvaluationResults(){
+    const all=loadRecords();
+    if(!all.length){alert("내보낼 평가결과가 없습니다.");return;}
+    const rows=[["권역","구역","구역유형","평가항목 대분류","1번","2번","3번","4번","5번","6번","7번","8번","9번","10번","11번","12번","총점"]];
+    all.forEach(r=>{
+      Object.keys(r.categories||{}).forEach(cat=>{
+        const c=r.categories[cat]||{};
+        const scoreMap={};
+        (c.questions||[]).forEach(q=>{scoreMap[Number(q.no)]=Number(q.score);});
+        const scores=[];
+        for(let i=1;i<=12;i++) scores.push(Object.prototype.hasOwnProperty.call(scoreMap,i)?scoreMap[i]:"");
+        rows.push([r.region||"",r.site||"",r.siteType||"",cat,...scores,Number(c.sum)||0]);
+      });
+    });
+    const files=[
+      {name:"[Content_Types].xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`},
+      {name:"_rels/.rels",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+      {name:"xl/workbook.xml",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="평가결과 전체" sheetId="1" r:id="rId1"/></sheets></workbook>`},
+      {name:"xl/_rels/workbook.xml.rels",data:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`},
+      {name:"xl/worksheets/sheet1.xml",data:makeXlsxSheet(rows)}
+    ];
+    const bytes=zipStore(files);
+    const blob=new Blob([bytes],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    const stamp=new Date().toISOString().slice(0,10).replace(/-/g,"");
+    a.href=url;a.download=`SK쉴더스_모의테스트_평가결과_전체_${stamp}.xlsx`;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
 
   // ---- Management UI ----
   const mgmtRegion=$("mgmtRegion"),siteAdminList=$("siteAdminList"),regionSitePicker=$("regionSitePicker"),assignedSiteList=$("assignedSiteList");
@@ -1279,6 +1362,7 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
   $("backManage").onclick=leaveManagement;
   finish.onclick=finishEvaluation;
   recordMonth.addEventListener("change",drawRecords);
+  $("exportResultsBtn").addEventListener("click",exportEvaluationResults);
   recordsEl.addEventListener("click",e=>{
     const del=e.target.closest(".delete-one");if(del){const id=Number(del.dataset.delete);if(confirm("이 평가를 삭제할까요?")){saveRecords(loadRecords().filter(r=>r.id!==id));drawRecords();}}
   });

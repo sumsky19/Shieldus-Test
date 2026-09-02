@@ -1,4 +1,4 @@
-const CACHE = 'skshieldus-mock-v10-region-settings';
+const CACHE = 'skshieldus-mock-v11-region-settings';
 const CORE = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./skshieldus-logo.png'];
 self.addEventListener('install', event => {
   self.skipWaiting();
