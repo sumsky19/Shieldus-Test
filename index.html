@@ -27,6 +27,7 @@ button{touch-action:manipulation}
 .title{font-weight:900;font-size:17px}
 label{display:block;font-size:13px;font-weight:800;color:#5d636c;margin:13px 0 6px}
 select,input{width:100%;height:50px;border:1px solid #cfd3d8;border-radius:11px;background:#fff;padding:0 12px;font-size:16px;color:#111}
+textarea{width:100%;border:1px solid #cfd3d8;border-radius:11px;background:#fff;padding:12px;font-size:15px;color:#111;line-height:1.5;resize:vertical;min-height:120px}
 select:disabled{background:#eceef1;color:#999}
 .section-note{font-size:12px;color:#777;margin-top:5px;line-height:1.5}
 .category-grid{display:grid;gap:10px}
@@ -140,7 +141,7 @@ select,input{
   border-color:#ddd0d3;
   color:var(--sk-ink);
 }
-select:focus,input:focus{
+select:focus,input:focus,textarea:focus{
   outline:2px solid rgba(245,130,32,.18);
   border-color:var(--sk-orange);
 }
@@ -487,8 +488,16 @@ touch-action:manipulation!important;-webkit-appearance:auto!important;appearance
     <div class="title">③ 평가 점수</div>
     <div id="questions"></div>
     <div id="total" class="total">총점 0 / 100점</div>
-    <button id="finish" class="finish" type="button">평가완료</button>
   </div>
+
+  <div class="card">
+    <div class="title">④ 특이사항</div>
+    <label for="remarks">특이사항</label>
+    <textarea id="remarks" placeholder="평가 중 확인된 특이사항, 미흡내용, 조치사항 등을 입력하세요." rows="5"></textarea>
+    <div class="section-note">※ 특이사항이 없으면 비워두셔도 됩니다.</div>
+  </div>
+
+  <button id="finish" class="finish" type="button">평가완료</button>
 </section>
 
 
@@ -593,7 +602,7 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
 (function(){
   const $=id=>document.getElementById(id);
   const home=$("homePage"), evalPage=$("evalPage"), viewPage=$("viewPage"), managePage=$("managePage");
-  const region=$("region"), site=$("site"), dateEl=$("date"), evaluator=$("evaluator");
+  const region=$("region"), site=$("site"), dateEl=$("date"), evaluator=$("evaluator"), remarksEl=$("remarks");
   const categoryGrid=$("categoryGrid"), questionCard=$("questionCard"), questionsEl=$("questions"), totalEl=$("total"), finish=$("finish");
   const recordMonth=$("recordMonth"), recordsEl=$("records"), topBtn=$("topBtn");
   let selectedCategory="", scoresByCategory={};
@@ -693,6 +702,7 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
     scoresByCategory={}; selectedCategory="";
     categoryGrid.innerHTML=""; questionsEl.innerHTML="";
     questionCard.style.display="none"; totalEl.textContent="총점 0 / 100점";
+    if(remarksEl) remarksEl.value="";
     finish.classList.remove("ready"); finish.disabled=true;
   }
   function populateRegions(selectEl,includeBlank=true){
@@ -792,7 +802,7 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
     });
     const normalized=Math.round((avgPct/req.length)*10)/10;
     const all=loadRecords();
-    all.unshift({id:Date.now(),region:region.value,site:site.value,siteType:currentSiteType(),date:dateEl.value,evaluator:evaluator.value.trim(),savedAt:new Date().toISOString(),categories,score:normalized.toFixed(1)+" / 100"});
+    all.unshift({id:Date.now(),region:region.value,site:site.value,siteType:currentSiteType(),date:dateEl.value,evaluator:evaluator.value.trim(),remarks:(remarksEl.value||"").trim(),savedAt:new Date().toISOString(),categories,score:normalized.toFixed(1)+" / 100"});
     saveRecords(all);
     alert("평가가 저장되었습니다."); page(home); resetEval(); dateEl.value=today();
   }
@@ -822,7 +832,9 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
           cats+='<br>평가점수 '+q.score+'점</div>';
         });cats+='</div></div>';
       });
-      return '<div class="record"><div class="record-head"><input class="record-check" type="checkbox" data-id="'+r.id+'"><div><div class="record-title">'+escapeHTML(r.site||"구역 미상")+' . '+escapeHTML(r.date)+' . '+formatTime(r.savedAt)+'</div><div class="record-meta">피평가자: '+escapeHTML(r.evaluator||"")+'</div></div></div><div class="record-total">총점 '+escapeHTML(r.score)+'</div><details class="record-result"><summary>▶평가결과 조회</summary>'+cats+'</details><button class="delete-one" type="button" data-delete="'+r.id+'">이 평가 삭제</button></div>';
+      const remarks=(r.remarks||"").trim();
+      const remarksHtml=remarks?'<div class="record-result" style="margin-top:10px"><b>특이사항</b><div style="margin-top:6px;white-space:pre-wrap;color:#444;line-height:1.5">'+escapeHTML(remarks)+'</div></div>':'';
+      return '<div class="record"><div class="record-head"><input class="record-check" type="checkbox" data-id="'+r.id+'"><div><div class="record-title">'+escapeHTML(r.site||"구역 미상")+' . '+escapeHTML(r.date)+' . '+formatTime(r.savedAt)+'</div><div class="record-meta">피평가자: '+escapeHTML(r.evaluator||"")+'</div></div></div><div class="record-total">총점 '+escapeHTML(r.score)+'</div><details class="record-result"><summary>▶평가결과 조회</summary>'+cats+'</details>'+remarksHtml+'<button class="delete-one" type="button" data-delete="'+r.id+'">이 평가 삭제</button></div>';
     }).join("");
   }
   function escapeHTML(v){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
@@ -877,21 +889,23 @@ const DATA={"zones":{"A권역":["SCM주현관","경영지원본관","P&T5주현�
       }).join("");
       return `<row r="${ri+1}">${cells}</row>`;
     }).join("");
+    const lastCol=excelColumnName(Math.max(1,...rows.map(r=>r.length)));
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`+
-      `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:Q${rows.length}"/><sheetData>${rowXml}</sheetData></worksheet>`;
+      `<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><dimension ref="A1:${lastCol}${rows.length}"/><sheetData>${rowXml}</sheetData></worksheet>`;
   }
   function exportEvaluationResults(){
     const all=loadRecords();
     if(!all.length){alert("내보낼 평가결과가 없습니다.");return;}
-    const rows=[["권역","구역","구역유형","평가항목 대분류","1번","2번","3번","4번","5번","6번","7번","8번","9번","10번","11번","12번","총점"]];
+    const rows=[["점검날짜","점검시간","권역","구역","구역유형","피평가자","평가항목 대분류","1번","2번","3번","4번","5번","6번","7번","8번","9번","10번","11번","12번","대분류 총점","특이사항"]];
+    // 각 대분류별 한 행에 기본정보 + 1~12번 점수 + 특이사항을 함께 기록
     all.forEach(r=>{
+      const checkTime=formatTime(r.savedAt), remarks=r.remarks||"";
       Object.keys(r.categories||{}).forEach(cat=>{
-        const c=r.categories[cat]||{};
-        const scoreMap={};
+        const c=r.categories[cat]||{}, scoreMap={};
         (c.questions||[]).forEach(q=>{scoreMap[Number(q.no)]=Number(q.score);});
         const scores=[];
         for(let i=1;i<=12;i++) scores.push(Object.prototype.hasOwnProperty.call(scoreMap,i)?scoreMap[i]:"");
-        rows.push([r.region||"",r.site||"",r.siteType||"",cat,...scores,Number(c.sum)||0]);
+        rows.push([r.date||"",checkTime,r.region||"",r.site||"",r.siteType||"",r.evaluator||"",cat,...scores,Number(c.sum)||0,remarks]);
       });
     });
     const files=[
