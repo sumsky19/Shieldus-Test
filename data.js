@@ -1,5 +1,5 @@
 window.SOP_DATA={
-  "appVersion": "v18-2-grade-improvement-fix",
+  "appVersion": "v20-storage-fix-default-5",
   "year": 2026,
   "maxScore": 100,
   "threshold": 90,
