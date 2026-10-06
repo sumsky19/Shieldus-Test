@@ -1,8 +1,9 @@
 window.SOP_DATA={
-  "appVersion": "v14-5point-100score",
+  "appVersion": "v16-grade-100score-final",
   "year": 2026,
   "maxScore": 100,
-  "threshold": 95,
+  "threshold": 90,
+  "excellentThreshold": 95,
   "questionCount": 20,
   "scoreOptions": [
     5,
