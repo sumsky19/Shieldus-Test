@@ -62,7 +62,7 @@
 
     <div class="card"><div class="title">③ 특이사항</div><textarea id="remarks" placeholder="평가 과정에서 확인한 특이사항, 답변 특이점, 추가 기록 등을 입력하세요."></textarea></div>
 
-    <div class="sticky-score"><div class="score-big" id="totalScore">총점 — / 100</div><div class="judgement" id="judgement">20개 문항 점수 입력 대기</div><div class="improve-box" id="improvePreview" style="display:none"></div><div id="finishHint" class="help" style="margin-top:8px;text-align:center">권역·POST·피평가자·평가일/시간·20개 문항 점수 입력 후 평가를 완료할 수 있습니다. 평가자는 선택 입력입니다.</div><button class="btn btn-primary is-disabled" id="finishBtn" style="width:100%;margin-top:10px" aria-disabled="true">평가 완료</button></div>
+    <div class="sticky-score"><div class="score-big" id="totalScore">총점 — / 100</div><div class="judgement" id="judgement">20개 문항 점수 입력 대기</div><div class="improve-box" id="improvePreview" style="display:none"></div><div id="finishHint" class="help" style="margin-top:8px;text-align:center">권역·POST·피평가자·평가일/시간·20개 문항 점수 입력 후 평가를 완료할 수 있습니다. 평가자는 선택 입력입니다.</div><button type="button" class="btn btn-primary" id="finishBtn" style="width:100%;margin-top:10px" aria-disabled="false">평가 완료</button></div>
   </section>
 
   <section id="viewPage" class="page">
@@ -175,8 +175,8 @@ function updateScore(){
     else {text='NI (Need Improvement)';if(three.length)text+=' · 최하점(3점) 문항 '+three.map(i=>'문항'+i).join(', ')+' → 개별 개선관리 대상으로 자동 이동.';else if(total<90)text+=' · 90점 미만이지만 최하점(3점) 문항이 없어 개선조치 대상은 아닙니다.';}
     improvePreview.textContent=text;improvePreview.style.display='block';
   }else judgement.textContent='20개 문항 점수 입력 대기';
-  const canFinish=total!=null&&post.value&&region.value&&subject.value.trim()&&evalDate.value&&evalTime.value;
-  finishBtn.classList.toggle('is-disabled',!canFinish);finishBtn.setAttribute('aria-disabled',String(!canFinish));
+  // 평가완료 버튼은 항상 클릭 가능하게 유지하고, 실제 저장 전 finishEval에서 누락값을 안내합니다.
+  finishBtn.classList.remove('is-disabled');finishBtn.setAttribute('aria-disabled','false');finishBtn.disabled=false;
 }
 function recordPayload(){
   const m=monthObj(),scores=currentScores(),total=scores.reduce((a,b)=>a+b,0),three=scores.map((s,i)=>s===3?i+1:null).filter(x=>x!=null),grade=gradeFor(total,three.length);
@@ -186,17 +186,35 @@ function recordPayload(){
   return {schemaVersion:4,id,managementNo:id,month:m.month,seed:m.seed,post:p?.id||'',postInfo:p||null,region:p?.region||region.value,evalDate:evalDate.value,evalTime:evalTime.value,evaluator:evaluator.value.trim(),subject:subject.value.trim(),items:m.items.map((qid,i)=>{const q=questionById(qid);return {no:i+1,id:q.id,originText:q.originText,checkpoints:q.checkpoints,maxScore:q.maxScore,minScore:q.minScore,criteria:q.criteria||[],revision:q.revision||'',score:scores[i]}}),scores,total,maxScore:D.maxScore,threshold:90,excellentThreshold:95,grade,judgement:grade,improvementType,targetItems,threePointItems:three,remarks:remarks.value.trim(),improvement:{status:improveType==='개선대상 없음'?'':'미조치',requestDate:'',partnerManager:'',educationDate:'',educationContent:'',evidence:'',replyDate:'',completedDate:''},savedAt:new Date().toISOString()};
 }
 function finishEval(){
-  const scores=currentScores();
-  const missing=scores.map((s,i)=>s==null?i+1:null).filter(x=>x!=null);
-  const missingInfo=[];
-  if(!evalDate.value)missingInfo.push('평가일');
-  if(!evalTime.value)missingInfo.push('평가시간');
-  if(!region.value)missingInfo.push('권역');
-  if(!post.value)missingInfo.push('POST');
-  if(!subject.value.trim())missingInfo.push('피평가자');
-  if(missing.length){alert('아직 입력하지 않은 평가점수가 있습니다.\n미입력 문항: '+missing.map(i=>'문항'+i).join(', '));return;}
-  if(missingInfo.length){alert('평가 기본정보를 입력해주세요.\n미입력: '+missingInfo.join(', '));return;}
-  const r=recordPayload();const all=loadRecords();const duplicateIndex=all.findIndex(x=>validRecord(x)&&x.seed===r.seed&&x.post===r.post);if(duplicateIndex>=0){if(!confirm('동일 POST의 해당 월 평가결과가 이미 있습니다. 기존 결과를 새 결과로 교체할까요?'))return;all.splice(duplicateIndex,1)}all.unshift(r);saveRecords(all);alert('평가 결과가 저장되었습니다.\n관리번호: '+r.managementNo+'\n판정: '+r.judgement+'\n총점: '+r.total+'점');resetEval();show('home')}
+  try{
+    const scores=currentScores();
+    const missing=scores.map((s,i)=>s==null?i+1:null).filter(x=>x!=null);
+    if(missing.length){
+      alert('아직 입력하지 않은 평가점수가 있습니다.\n미입력 문항: '+missing.map(i=>'문항'+i).join(', '));
+      return;
+    }
+    if(!region.value || !post.value){
+      alert('권역과 POST를 선택해주세요.');
+      return;
+    }
+    const r=recordPayload();
+    const all=loadRecords();
+    const duplicateIndex=all.findIndex(x=>validRecord(x)&&x.seed===r.seed&&x.post===r.post);
+    if(duplicateIndex>=0){
+      if(!confirm('동일 POST의 해당 월 평가결과가 이미 있습니다. 기존 결과를 새 결과로 교체할까요?')) return;
+      all.splice(duplicateIndex,1);
+    }
+    all.unshift(r);
+    saveRecords(all);
+    alert('평가 결과가 저장되었습니다.\n관리번호: '+r.managementNo+'\n등급: '+r.grade+'\n총점: '+r.total+'점');
+    resetEval();
+    show('home');
+  }catch(err){
+    console.error(err);
+    alert('평가 결과 저장 중 오류가 발생했습니다.\n'+(err?.message||err));
+  }
+}
+
 function resetEval(){region.value='';refreshPostSelects();evaluator.value='';subject.value='';remarks.value='';const now=new Date();evalDate.value=now.toISOString().slice(0,10);evalTime.value=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');renderQuestions();}
 
 function refreshViewFilters(){
@@ -290,7 +308,7 @@ function buildWorkbook(sheets){const styles='<?xml version="1.0" encoding="UTF-8
 function openModal(){$('modal').classList.add('show');$('modal').setAttribute('aria-hidden','false')}function closeModal(){$('modal').classList.remove('show');$('modal').setAttribute('aria-hidden','true')}
 function bindEvents(){
  $('startBtn').onclick=()=>{resetEval();show('eval')};$('viewBtn').onclick=()=>{refreshViewFilters();show('view')};$('manageBtn').onclick=()=>{renderManagement();show('manage')};$('backEval').onclick=()=>show('home');$('backView').onclick=()=>show('home');$('backManage').onclick=()=>show('home');
- month.onchange=renderQuestions;region.onchange=refreshPostSelects;post.onchange=()=>{renderPostInfo();updateScore()};evaluator.oninput=updateScore;subject.oninput=updateScore;evalDate.oninput=updateScore;evalTime.oninput=updateScore;finishBtn.onclick=finishEval;
+ month.onchange=renderQuestions;region.onchange=refreshPostSelects;post.onchange=()=>{renderPostInfo();updateScore()};evaluator.oninput=updateScore;subject.oninput=updateScore;evalDate.oninput=updateScore;evalTime.oninput=updateScore;finishBtn.onclick=null;finishBtn.addEventListener('click',finishEval);
  document.querySelectorAll('#viewTabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#viewTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');['dashboard','results','improvement'].forEach(k=>$('view'+k.charAt(0).toUpperCase()+k.slice(1)).style.display=k===b.dataset.viewtab?'block':'none')});
  ['filterYear','filterMonth','filterRegion','filterPost','filterJudgement'].forEach(id=>$(id).onchange=renderViewResults);['improveFilterStatus','improveFilterMonth','improveFilterRegion'].forEach(id=>$(id).onchange=renderImprovement);
  $('selectAllVisible').onchange=()=>{const checked=$('selectAllVisible').checked;document.querySelectorAll('[data-record-check]').forEach(c=>c.checked=checked);updateExportDeleteButtons()};$('exportSelectedBtn').onclick=()=>{const ids=new Set(selectedIds());exportXlsx(allRecords().filter(r=>ids.has(r.id)),'selected')};$('exportAllBtn').onclick=()=>exportXlsx(allRecords().filter(validRecord),'all');$('deleteSelectedBtn').onclick=()=>{const ids=new Set(selectedIds());if(!ids.size)return;if(confirm('선택한 평가 '+ids.size+'건을 삭제하시겠습니까?')){saveRecords(allRecords().filter(r=>!ids.has(r.id)));renderViewResults();renderViewDashboard();renderImprovement()}};$('deleteAllBtn').onclick=()=>{const all=allRecords();if(!all.length)return;if(confirm('저장된 평가 '+all.length+'건을 모두 삭제하시겠습니까?')){saveRecords([]);renderViewResults();renderViewDashboard();renderImprovement()}};
