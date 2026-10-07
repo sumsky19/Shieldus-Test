@@ -33,7 +33,7 @@
     <p class="home-sub">월 20문항 · 100점 만점 · E / Good / NI 3단계 · 최하점 3점 · 57개 POST 관리</p>
     <button class="primary" id="startBtn">평가 시작</button>
     <button class="secondary" id="viewBtn">평가 조회 / Dashboard</button>
-    <button class="secondary" id="manageBtn">SOP 운영관리</button><div class="app-version">Version v21.0 · 2026-10-07</div>
+    <button class="secondary" id="manageBtn">SOP 운영관리</button><div class="app-version">Version v22.0 · 2026-10-07</div>
   </div></section>
 
   <section id="evalPage" class="page">
@@ -107,9 +107,27 @@ const BASE=window.SOP_DATA;
 const $=id=>document.getElementById(id);
 const pages={home:$('homePage'),eval:$('evalPage'),view:$('viewPage'),manage:$('managePage')};
 const RECORD_KEY='sop_mock_v20_records', DEFAULT_KEY='sop_mock_v20_default', CONFIG_KEY='sop_mock_v20_config';
+const APP_VERSION='v22.0';
 const LEGACY_RECORD_KEYS=['sop_mock_v19_records','sop_mock_v18_3_records','sop_mock_v18_2_records','sop_mock_v18_records','sop_mock_v17_records','sop_mock_v16_records'];
 const LEGACY_CONFIG_KEYS=['sop_mock_v19_config','sop_mock_v18_3_config','sop_mock_v18_2_config','sop_mock_v18_config','sop_mock_v17_config'];
 let D=loadConfig();
+// v22 migration: keep stored operational settings/results, but ensure every master question has the current 4-keyword scoring structure.
+(function ensureKeywordMaster(){
+  try{
+    let changed=false;
+    if(!Array.isArray(D.questions)||D.questions.length!==BASE.questions.length){D.questions=clone(BASE.questions);changed=true}
+    const baseById=new Map(BASE.questions.map(q=>[q.id,q]));
+    D.questions=D.questions.map(q=>{
+      const b=baseById.get(q.id); if(!b)return q;
+      const out=Object.assign({},q);
+      if(!Array.isArray(out.keywords)||out.keywords.length!==4){out.keywords=clone(b.keywords);changed=true}
+      if(Number(out.maxScore)!==5){out.maxScore=5;changed=true}
+      if(Number(out.minScore)!==3){out.minScore=3;changed=true}
+      return out;
+    });
+    if(changed){try{localStorage.setItem(CONFIG_KEY,JSON.stringify(D))}catch(e){}}
+  }catch(e){console.warn('v22 keyword master migration failed',e)}
+})();
 
 const month=$('month'), region=$('region'), post=$('post'), evalDate=$('evalDate'), evalTime=$('evalTime'), evaluator=$('evaluator'), subject=$('subject'), remarks=$('remarks');
 const questionsEl=$('questions'), totalScore=$('totalScore'), judgement=$('judgement'), improvePreview=$('improvePreview'), finishBtn=$('finishBtn'), progressBar=$('progressBar');
@@ -119,8 +137,19 @@ function uid(){return 'SOP-'+new Date().getFullYear()+String(new Date().getMonth
 function managementNo(seed,pid){return 'SOP-'+String(seed||D.year).replace('-','-')+'-'+String(pid||'').trim();}
 function mergeBase(saved){
   const out=clone(BASE); if(!saved||typeof saved!=='object')return out;
-  Object.keys(out).forEach(k=>{if(Object.prototype.hasOwnProperty.call(saved,k))out[k]=clone(saved[k]);});
-  if(!Array.isArray(out.posts))out.posts=clone(BASE.posts);if(!Array.isArray(out.questions))out.questions=clone(BASE.questions);if(!Array.isArray(out.monthly))out.monthly=clone(BASE.monthly);if(!Array.isArray(out.regions))out.regions=clone(BASE.regions);if(!Array.isArray(out.rules))out.rules=clone(BASE.rules);if(!Array.isArray(out.evaluatorRules))out.evaluatorRules=clone(BASE.evaluatorRules);if(!Array.isArray(out.criteria))out.criteria=clone(BASE.criteria);if(!Array.isArray(out.scoreOptions))out.scoreOptions=[5,4.5,4,3.5,3];
+  Object.keys(out).forEach(k=>{if(Object.prototype.hasOwnProperty.call(saved,k)&&k!=='questions')out[k]=clone(saved[k]);});
+  if(!Array.isArray(out.posts))out.posts=clone(BASE.posts);if(!Array.isArray(out.monthly))out.monthly=clone(BASE.monthly);if(!Array.isArray(out.regions))out.regions=clone(BASE.regions);if(!Array.isArray(out.rules))out.rules=clone(BASE.rules);if(!Array.isArray(out.evaluatorRules))out.evaluatorRules=clone(BASE.evaluatorRules);if(!Array.isArray(out.criteria))out.criteria=clone(BASE.criteria);if(!Array.isArray(out.scoreOptions))out.scoreOptions=[5,4.5,4,3.5,3];
+  const savedQuestions=Array.isArray(saved.questions)?saved.questions:[];
+  const byId=new Map(savedQuestions.map(q=>[String(q?.id||''),q]));
+  out.questions=BASE.questions.map((b,i)=>{
+    const sq=byId.get(String(b.id));
+    if(!sq)return clone(b);
+    const merged=clone(b);
+    ['originText','checkpoints','maxScore','minScore','group','note'].forEach(k=>{if(Object.prototype.hasOwnProperty.call(sq,k))merged[k]=clone(sq[k]);});
+    merged.keywords=Array.isArray(sq.keywords)&&sq.keywords.length===4?clone(sq.keywords):clone(b.keywords);
+    merged.criteria=Array.isArray(sq.criteria)&&sq.criteria.length?clone(sq.criteria):clone(b.criteria||BASE.criteria);
+    return merged;
+  });
   return out;
 }
 function readJsonStorage(key,fallback=null){try{const raw=localStorage.getItem(key);if(raw==null)return fallback;return JSON.parse(raw)}catch(e){return fallback}}
