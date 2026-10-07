@@ -1,4 +1,4 @@
-const CACHE='sop-mock-v25-final-ui-20261008';
+const CACHE='sop-mock-v25-evalmethod-20261008';
 const ASSETS=['./','./index.html','./SKSHIELDUS_MockTest_v25.html','./data.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./skshieldus-logo.png','./sw.js'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
