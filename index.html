@@ -33,7 +33,7 @@
     <p class="home-sub">월 20문항 · 100점 만점 · E / Good / NI 3단계 · 최하점 3점 · 57개 POST 관리</p>
     <button class="primary" id="startBtn">평가 시작</button>
     <button class="secondary" id="viewBtn">평가 조회 / Dashboard</button>
-    <button class="secondary" id="manageBtn">SOP 운영관리</button><div class="app-version">Version v23.0 · 2026-10-07</div>
+    <button class="secondary" id="manageBtn">SOP 운영관리</button><div class="app-version">Version v24.0 · 2026-10-07</div>
   </div></section>
 
   <section id="evalPage" class="page">
@@ -107,7 +107,7 @@ const BASE=window.SOP_DATA;
 const $=id=>document.getElementById(id);
 const pages={home:$('homePage'),eval:$('evalPage'),view:$('viewPage'),manage:$('managePage')};
 const RECORD_KEY='sop_mock_v20_records', DEFAULT_KEY='sop_mock_v20_default', CONFIG_KEY='sop_mock_v20_config';
-const APP_VERSION='v23.0';
+const APP_VERSION='v24.0';
 const LEGACY_RECORD_KEYS=['sop_mock_v19_records','sop_mock_v18_3_records','sop_mock_v18_2_records','sop_mock_v18_records','sop_mock_v17_records','sop_mock_v16_records'];
 const LEGACY_CONFIG_KEYS=['sop_mock_v19_config','sop_mock_v18_3_config','sop_mock_v18_2_config','sop_mock_v18_config','sop_mock_v17_config'];
 let D=loadConfig();
@@ -366,33 +366,40 @@ function renderSites(){
 function exportXlsx(records,kind){
  const source=Array.isArray(records)?records:[];
  if(!source.length){alert('내보낼 평가결과가 없습니다.\n평가 결과 조회 화면에 저장된 평가가 있는지 확인해주세요.');return}
- const exportedAt=new Date().toLocaleString('ko-KR');
- const evalRows=[['월','Seed','POST ID','POST명','권역','구역유형','평가일','평가시간','평가자','피평가자','문항순번','평가항목ID','원문항 내용','주요 확인내용','배점','최저점','공통 평가기준','점수','총점','평가등급','개선구분','3점 문항','특이사항','관리번호']];
- const impRows=[['월','POST ID','POST명','권역','평가일','평가시간','평가자','피평가자','총점','평가등급','개선구분','대상문항','개선요청일','협력사 관리자','자체교육일','교육내용','증적자료 경로/첨부','회신일','조치완료일','상태','관리번호']];
+ const headers=['POST ID','POST명','권역','평가일','평가시간','평가자','피평가자',...Array.from({length:20},(_,i)=>'문항 '+(i+1))];
+ const rows=[headers];
  source.forEach(r=>{
    const scores=recordScores(r);
-   const grade=getRecordGrade(r);
-   const total=Number.isFinite(Number(r.total))?Number(r.total):(scores.filter(Number.isFinite).length===D.questionCount?scores.reduce((a,b)=>a+b,0):'');
-   const items=Array.isArray(r.items)?r.items:[];
-   const fallbackItems=scores.map((score,i)=>({no:i+1,id:D.monthly.find(m=>m.month===r.month)?.items?.[i]||'',score}));
-   const rows=items.length?items:fallbackItems;
-   rows.forEach((x,i)=>{
-     const q=questionById(x.id)||{};
-     evalRows.push([r.month||'',r.seed||'',r.post||r.postInfo?.id||'',r.postInfo?.name||'',r.region||r.postInfo?.region||'',r.postInfo?.type||'',r.evalDate||'',r.evalTime||'',r.evaluator||'',r.subject||'',x.no??i+1,x.id||'',q.originText||'',q.checkpoints||'',x.maxScore??q.maxScore??5,x.minScore??q.minScore??3,(q.criteria||D.criteria||[]).join('\n'),x.score??'',total,gradeLabel(grade),r.improvementType||'',(r.threePointItems||[]).map(j=>'문항'+j).join(', '),r.remarks||'',r.managementNo||r.id||'']);
+   const fallback=Array.isArray(r.items)?r.items.map(x=>Number(x?.score)).slice(0,20):[];
+   const finalScores=Array.from({length:20},(_,i)=>{
+     const n=Number(scores?.[i]);
+     if(Number.isFinite(n)) return n;
+     const f=Number(fallback[i]);
+     return Number.isFinite(f)?f:'';
    });
-   if(r.improvementType!=='개선대상 없음')impRows.push([r.month||'',r.post||r.postInfo?.id||'',r.postInfo?.name||'',r.region||r.postInfo?.region||'',r.evalDate||'',r.evalTime||'',r.evaluator||'',r.subject||'',total,gradeLabel(grade),r.improvementType||'',(r.targetItems||[]).join(', '),r.improvement?.requestDate||'',r.improvement?.partnerManager||'',r.improvement?.educationDate||'',r.improvement?.educationContent||'',r.improvement?.evidence||'',r.improvement?.replyDate||'',r.improvement?.completedDate||'',r.improvement?.status||'미조치',r.managementNo||r.id||'']);
+   const postId=r.postInfo?.id||r.post||'';
+   const postName=r.postInfo?.name||'';
+   const region=r.region||r.postInfo?.region||'';
+   rows.push([
+     postId,
+     postName,
+     region,
+     r.evalDate||'',
+     r.evalTime||'',
+     r.evaluator||'',
+     r.subject||'',
+     ...finalScores
+   ]);
  });
- const map=new Map(source.filter(r=>r&&r.seed&&r.post).map(r=>[r.seed+'|'+r.post,r]));
- const postRows=[['POST ID','POST명','권역',...D.monthly.map(m=>m.month),'연간평균','최고점','최저점','NI 월수','평가완료월수','최저점월']];
- D.posts.filter(p=>p.use!=='N').forEach(p=>{const vals=D.monthly.map(m=>map.get(m.seed+'|'+p.id)?.total??'');const nums=vals.filter(x=>typeof x==='number'&&Number.isFinite(x));const avg=nums.length?(nums.reduce((a,b)=>a+b,0)/nums.length).toFixed(1):'';const min=nums.length?Math.min(...nums):'';const max=nums.length?Math.max(...nums):'';const niMonths=D.monthly.reduce((n,m)=>n+(getRecordGrade(map.get(m.seed+'|'+p.id))==='NI'?1:0),0);const mi=min===''?-1:vals.findIndex(x=>x===min);postRows.push([p.id,p.name,p.region,...vals,avg,max,min,niMonths,nums.length,mi>=0?D.monthly[mi].month:''])});
- const monthRows=[['월','계획 POST','평가완료','완료율','평균점수','E','Good','NI','개선 미조치']];
- D.monthly.forEach(m=>{const rr=source.filter(r=>r&&r.seed===m.seed);const active=D.posts.filter(p=>p.use!=='N').length;const unique=new Set(rr.map(r=>r.post).filter(Boolean));monthRows.push([m.month,active,unique.size,active?((unique.size/active)*100).toFixed(1)+'%':'0%',rr.length?(rr.reduce((a,r)=>a+(Number.isFinite(Number(r.total))?Number(r.total):0),0)/rr.length).toFixed(1):'',rr.filter(r=>getRecordGrade(r)==='E').length,rr.filter(r=>getRecordGrade(r)==='Good').length,rr.filter(r=>getRecordGrade(r)==='NI').length,rr.filter(r=>r.improvementType!=='개선대상 없음'&&r.improvement?.status!=='조치완료').length])});
- const vr=source.filter(validRecord);const completedCount=new Set(vr.map(r=>r.seed+'|'+r.post)).size;const plannedCount=D.posts.filter(p=>p.use!=='N').length*12;const avgValue=vr.length?(vr.reduce((a,r)=>a+r.total,0)/vr.length).toFixed(1):'';
- const kpi=[['항목','값'],['내보내기 구분',kind==='selected'?'선택':'전체'],['내보낸 평가건수',source.length],['내보낸 문항수',evalRows.length-1],['내보내기 일시',exportedAt],['관리연도',D.year],['관리대상 POST',D.posts.filter(p=>p.use!=='N').length],['연간 계획 평가',plannedCount],['유효 20문항 평가',vr.length],['평가 완료율',plannedCount?(completedCount/plannedCount*100).toFixed(1)+'%':'0%'],['연간 평균',avgValue],['E',vr.filter(r=>getRecordGrade(r)==='E').length],['Good',vr.filter(r=>getRecordGrade(r)==='Good').length],['NI',vr.filter(r=>getRecordGrade(r)==='NI').length],['3점 포함',vr.filter(r=>r.threePointItems?.length).length],['개선 미조치',source.filter(r=>r.improvementType!=='개선대상 없음'&&r.improvement?.status!=='조치완료').length]];
- const masterRows=[['평가항목ID','구분','원문항 내용','주요 확인내용','배점','최저점','공통 평가기준','비고'],...D.questions.map(q=>[q.id,q.group,q.originText,q.checkpoints,q.maxScore,q.minScore,(q.criteria||D.criteria).join('\n'),q.note||''])];
- const siteRows=[['POST ID','POST명','권역','유형','중요도','사용여부','비고'],...D.posts.map(p=>[p.id,p.name,p.region,p.type,p.importance||'',p.use||'Y',p.note||''])];
- const sheets=[['Dashboard',kpi],['평가결과조회',evalRows],['개선관리',impRows],['02_월별현황',monthRows],['03_POST별연간현황',postRows],['06_평가항목_MASTER',masterRows],['05_POST_MASTER',siteRows]];
- const bytes=buildWorkbook(sheets);const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='SK쉴더스_모의테스트_통합관리_'+(kind==='selected'?'선택':'전체')+'_'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'.xlsx';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1200);alert('엑셀 내보내기 완료: '+source.length+'건 / 문항 '+(evalRows.length-1)+'건');}
+ const bytes=buildWorkbook([['평가결과조회',rows]]);
+ const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+ const a=document.createElement('a'),url=URL.createObjectURL(blob);
+ a.href=url;
+ a.download='SK쉴더스_모의테스트_평가결과조회_'+(kind==='selected'?'선택':'전체')+'_'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'.xlsx';
+ document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1200);
+ alert('엑셀 내보내기 완료: '+source.length+'건 / 평가결과조회 1개 시트 / 문항 1~20 점수 포함');
+}
 function xmlEsc(s){return String(s??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
 function colName(n){let s='';while(n){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26)}return s}
 function sheetXml(rows){const cols=Math.max(1,...rows.map(r=>r.length));let xml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><dimension ref="A1:'+colName(cols)+rows.length+'"/><sheetData>';rows.forEach((row,ri)=>{xml+='<row r="'+(ri+1)+'">';row.forEach((v,ci)=>{const ref=colName(ci+1)+(ri+1);if(typeof v==='number'&&Number.isFinite(v))xml+='<c r="'+ref+'"'+(ri===0?' s="1"':'')+'><v>'+v+'</v></c>';else xml+='<c r="'+ref+'" t="inlineStr"'+(ri===0?' s="1"':'')+'><is><t xml:space="preserve">'+xmlEsc(v)+'</t></is></c>'});xml+='</row>'});return xml+'</sheetData><autoFilter ref="A1:'+colName(cols)+rows.length+'"/></worksheet>'}
