@@ -33,7 +33,7 @@
     <p class="home-sub">월 20문항 · 100점 만점 · E / Good / NI 3단계 · 최하점 3점 · 57개 POST 관리</p>
     <button class="primary" id="startBtn">평가 시작</button>
     <button class="secondary" id="viewBtn">평가 조회 / Dashboard</button>
-    <button class="secondary" id="manageBtn">SOP 운영관리</button><div class="app-version">Version v25.0 · 2026-10-07</div>
+    <button class="secondary" id="manageBtn">SOP 운영관리</button><div class="app-version">Version v25.0 · FINAL · 2026-10-08<br><span style="font-size:10px">BUILD 25-FINAL-20261008</span></div>
   </div></section>
 
   <section id="evalPage" class="page">
@@ -108,6 +108,7 @@ const $=id=>document.getElementById(id);
 const pages={home:$('homePage'),eval:$('evalPage'),view:$('viewPage'),manage:$('managePage')};
 const RECORD_KEY='sop_mock_v20_records', DEFAULT_KEY='sop_mock_v20_default', CONFIG_KEY='sop_mock_v20_config';
 const APP_VERSION='v25.0';
+const BUILD_ID='25-FINAL-20261008';
 const LEGACY_RECORD_KEYS=['sop_mock_v19_records','sop_mock_v18_3_records','sop_mock_v18_2_records','sop_mock_v18_records','sop_mock_v17_records','sop_mock_v16_records'];
 const LEGACY_CONFIG_KEYS=['sop_mock_v19_config','sop_mock_v18_3_config','sop_mock_v18_2_config','sop_mock_v18_config','sop_mock_v17_config'];
 let D=loadConfig();
@@ -216,7 +217,7 @@ function questionById(id){return D.questions.find(q=>q.id===id)}
 function postById(id){return D.posts.find(p=>p.id===id)}
 function regionOptions(){return (D.regions||[]).map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('')}
 function typeOptions(selected){return (D.types||['건물','랩실(UT)','외곽','기타']).map(x=>'<option value="'+esc(x)+'" '+(x===selected?'selected':'')+'>'+esc(x)+'</option>').join('')}
-function init(){try{const migrated=loadRecords();if(migrated.length)saveRecords(migrated)}catch(e){console.warn('기존 평가결과 정리 중 오류',e)}initSelects();bindEvents();renderManagement();renderViewDashboard();renderViewResults();renderImprovement();if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+function init(){try{const migrated=loadRecords();if(migrated.length)saveRecords(migrated)}catch(e){console.warn('기존 평가결과 정리 중 오류',e)}initSelects();bindEvents();renderManagement();renderViewDashboard();renderViewResults();renderImprovement();if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?build=25-final-20261008').then(r=>r.update()).catch(()=>{}));}
 function initSelects(){
   month.innerHTML=D.monthly.map(m=>'<option value="'+esc(m.seed)+'">'+esc(m.month)+' ('+esc(m.seed)+')</option>').join('');
   const now=new Date();const current=(D.monthly.some(m=>m.seed===now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'))?now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0'):D.monthly[0]?.seed)||'';month.value=current;
