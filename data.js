@@ -1,17 +1,11 @@
 window.SOP_DATA={
-  "appVersion": "v21-keyword-score",
+  "appVersion": "v25-keyword-score",
   "year": 2026,
   "maxScore": 100,
-  "threshold": 90,
+  "threshold": 95,
   "excellentThreshold": 95,
   "questionCount": 20,
-  "scoreOptions": [
-    5,
-    4.5,
-    4,
-    3.5,
-    3
-  ],
+  "scoreOptions": [],
   "posts": [
     {
       "id": "Z01",
