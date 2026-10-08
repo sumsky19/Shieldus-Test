@@ -385,7 +385,7 @@ function renderSites(){
 
 function exportRows(records){
  const source=Array.isArray(records)?records:[];
- const headers=['POST ID','POST명','권역','평가일','평가시간','평가자','피평가자',...Array.from({length:20},(_,i)=>'문항 '+(i+1))];
+ const headers=['POST ID','POST명','권역','평가일','평가시간','평가자','피평가자',...Array.from({length:20},(_,i)=>'문항 '+(i+1)),'특이사항'];
  const rows=[headers];
  source.forEach(r=>{
    const scores=recordScores(r);
@@ -399,7 +399,7 @@ function exportRows(records){
    const postId=r.postInfo?.id||r.post||'';
    const postName=r.postInfo?.name||'';
    const region=r.region||r.postInfo?.region||'';
-   rows.push([postId,postName,region,r.evalDate||'',r.evalTime||'',r.evaluator||'',r.subject||'',...finalScores]);
+   rows.push([postId,postName,region,r.evalDate||'',r.evalTime||'',r.evaluator||'',r.subject||'',...finalScores,r.remarks||'']);
  });
  return rows;
 }
